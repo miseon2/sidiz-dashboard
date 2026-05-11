@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIDIZ 네이버 대시보드</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#FAF8F3}
+  button{font-family:inherit}
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#D0CCC4;border-radius:2px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback} = React;
+const {ComposedChart,Bar,Line,XAxis,YAxis,CartesianGrid,Tooltip,
+  ResponsiveContainer,AreaChart,Area,ReferenceLine} = Recharts;
+
+const API = "https://script.google.com/macros/s/AKfycbw48_cTrcAG14Y-reW6anXa4RZafUGUdunvdkyH1J4dVyaIaOK8kJI0U4odKXz8Pypseg/exec";
+const GID1 = "543240057";
+const GID2 = "1006983265";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1UyoOkvJMY8kTLAZzjw6PoYw6J_YWrfakcP9iEvCUrQs";
+
+const C = {
+  bg:"#FAF8F3",card:"#FFFFFF",black:"#1A1A1A",gray:"#888",
+  lightGray:"#E8E4DC",gold:"#C9A84C",red:"#E53E3E",green:"#2F855A",
+  pink:"#F9BFBF",border:"#EEEBE4",
+};
+
+const fmt억 = v => {const n=Number(v);return isNaN(n)||!v?"-":(n/1e8).toFixed(1)+"억";};
+const fmtPct = v => {const n=parseFloat(v);return isNaN(n)?"-":n.toFixed(1)+"%";};
+const fmtWon = v => {const n=Number(v);return isNaN(n)||!v?"-":n.toLocaleString("ko-KR")+"원";};
+const fmtNum = v => (!v&&v!==0)?"-":Number(v).toLocaleString("ko-KR");
+
+function calcScore(rating,help,hasRel,len){
+  const r=({1:3,2:2,3:1}[rating]||0)*2;
+  const h=(help>=5?3:help>=1?2:0)*2;
+  return r+h+(hasRel?5:0)+(len>=50?5:len>=30?3:1);
+}
+function scoreLevel(s){return s<=5?"낮음":s<=10?"보통":s<=15?"높음":"심각";}
+
+const levelColor={"낮음":"#888","보통":"#C9A84C","높음":"#E88C00","심각":"#E53E3E"};
+const levelBg={"낮음":"#F5F5F5","보통":"#FFF8E8","높음":"#FFF0D0","심각":"#FFF0F0"};
+
+function KpiCard({label,value,sub,subColor,icon}){
+  return React.createElement("div",{style:{background:C.card,borderRadius:14,padding:"18px 20px",border:`0.5px solid ${C.border}`,flex:1,minWidth:0}},
+    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:8}},
+      React.createElement("span",{style:{fontSize:11,color:C.gray,fontWeight:500}},label),
+      React.createElement("span",{style:{fontSize:15,opacity:.35}},icon)
+    ),
+    React.createElement("div",{style:{fontSize:24,fontWeight:800,color:C.black,letterSpacing:-.5,lineHeight:1}},value),
+    sub&&React.createElement("div",{style:{fontSize:11,color:subColor||C.gray,marginTop:6,fontWeight:500}},sub)
+  );
+}
+
+function ChartCard({title,sub,children,style}){
+  return React.createElement("div",{style:{background:C.card,borderRadius:14,padding:"18px 20px",border:`0.5px solid ${C.border}`,...style}},
+    React.createElement("div",{style:{marginBottom:14}},
+      React.createElement("div",{style:{fontSize:14,fontWeight:700,color:C.black}},title),
+      sub&&React.createElement("div",{style:{fontSize:11,color:C.gray,marginTop:2}},sub)
+    ),
+    children
+  );
+}
+
+function App(){
+  const [tab,setTab]=useState(1);
+  const [tab1Raw,setTab1Raw]=useState([]);
+  const [tab2Raw,setTab2Raw]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState("");
+  const [lastUpdated,setLastUpdated]=useState("");
+  const [selYear,setSelYear]=useState(2026);
+  const [selMonth,setSelMonth]=useState(null);
+  const [t2Tab,setT2Tab]=useState(1);
+  const [prodFilter,setProdFilter]=useState([]);
+  const [dropOpen,setDropOpen]=useState(false);
+
+  const fetchAll=useCallback(async()=>{
+    setLoading(true);setError("");
+    try{
+      const [r1,r2]=await Promise.all([
+        fetch(`${API}?gid=${GID1}`),
+        fetch(`${API}?gid=${GID2}`),
+      ]);
+      const [j1,j2]=await Promise.all([r1.json(),r2.json()]);
+      setTab1Raw(j1.data||[]);
+      setTab2Raw(j2.data||[]);
+      setLastUpdated(new Date().toLocaleDateString("ko-KR"));
+      const yrs=[...new Set((j1.data||[]).map(r=>{
+        const d=Object.values(r)[0]||"";
+        return parseInt(String(d).split("/")[0]);
+      }).filter(y=>!isNaN(y)))].sort();
+      if(yrs.length)setSelYear(Math.max(...yrs));
+    }catch(e){
+      setError("데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요.");
+    }
+    setLoading(false);
+  },[]);
+
+  useEffect(()=>{fetchAll();},[]);
+
+  const p1=tab1Raw.map(row=>{
+    const v=Object.values(row);
+    const dateStr=String(v[0]||"");
+    const parts=dateStr.split("/");
+    const toN=x=>parseFloat(String(x).replace(/[,\s%]/g,""))||0;
+    return{year:parseInt(parts[0]),month:parseInt(parts[1]),
+      ERP:toN(v[10]),target:toN(v[8]),achieve:toN(v[11]),
+      buyers:toN(v[4]),refundAmt:toN(v[7]),payment:toN(v[6]),
+      refundCnt:toN(v[5]),reviews:toN(v[3]),aov:toN(v[12]),
+      refundRate:toN(v[13]),reviewYoy:toN(v[14])};
+  }).filter(r=>!isNaN(r.year)&&r.year>2000);
+
+  const years1=[...new Set(p1.map(r=>r.year))].sort();
+  const cur1=p1.filter(r=>r.year===selYear);
+  const prev1=p1.filter(r=>r.year===selYear-1);
+  const availM1=cur1.map(r=>r.month).sort((a,b)=>a-b);
+  const latestM=availM1.length?Math.max(...availM1):null;
+  const activeM=selMonth||latestM;
+  const curMD=cur1.find(r=>r.month===activeM);
+  const prevMD=cur1.find(r=>r.month===(activeM||1)-1);
+
+  const ytdERP=cur1.reduce((s,r)=>s+r.ERP,0);
+  const ytdTarget=cur1.reduce((s,r)=>s+r.target,0);
+  const ytdAch=ytdTarget>0?(ytdERP/ytdTarget)*100:0;
+  const prevYtdERP=prev1.filter(r=>r.month<=(activeM||12)).reduce((s,r)=>s+r.ERP,0);
+  const ytdYoY=prevYtdERP>0?((ytdERP-prevYtdERP)/prevYtdERP)*100:0;
+  const ytdBuyers=cur1.reduce((s,r)=>s+r.buyers,0);
+  const avgAOV=ytdBuyers>0?ytdERP/ytdBuyers:0;
+  const prevAOV=prev1.length?prev1.reduce((s,r)=>s+r.aov,0)/prev1.length:0;
+  const aovYoY=prevAOV>0?((avgAOV-prevAOV)/prevAOV)*100:0;
+  const ytdRefund=cur1.reduce((s,r)=>s+r.refundAmt,0);
+  const ytdPay=cur1.reduce((s,r)=>s+r.payment,0);
+  const avgRefRate=ytdPay>0?(ytdRefund/ytdPay)*100:0;
+  const prevRefRate=prev1.length?prev1.reduce((s,r)=>s+r.refundRate,0)/prev1.length:0;
+  const refYoY=avgRefRate-prevRefRate;
+
+  const monthChart=Array.from({length:12},(_,i)=>{
+    const m=i+1,c=cur1.find(r=>r.month===m),p=prev1.find(r=>r.month===m);
+    return{month:`${m}`,실적:c?.ERP||null,목표:c?.target||null,전년:p?.ERP||null,달성율:c?.achieve||null};
+  });
+  const buyerChart=Array.from({length:12},(_,i)=>{
+    const m=i+1,c=cur1.find(r=>r.month===m),p=prev1.find(r=>r.month===m);
+    return{month:`${m}`,cur:c?.buyers||null,prev:p?.buyers||null};
+  });
+  const refundChart=cur1.map(r=>({month:`${r.month}`,금액:r.refundAmt,건수:r.refundCnt}));
+  const reviewChart=Array.from({length:12},(_,i)=>{
+    const m=i+1,c=cur1.find(r=>r.month===m),p=prev1.find(r=>r.month===m);
+    return{month:`${m}`,cur:c?.reviews||null,prev:p?.reviews||null,yoy:c?.reviewYoy||null};
+  });
+
+  const donutR=60,circ=2*Math.PI*donutR,donutPct=Math.min(ytdAch,100);
+
+  const p2=tab2Raw.map(row=>{
+    const v=Object.values(row);
+    const dateStr=String(v[0]||"");
+    const parts=dateStr.split("-");
+    const rating=parseInt(v[7])||0;
+    const content=String(v[8]||"");
+    const help=parseInt(v[9])||0;
+    const related=String(v[10]||"").trim();
+    const score=calcScore(rating,help,!!related,content.length);
+    return{year:parseInt(parts[0]),month:parseInt(parts[1]),
+      date:dateStr,prodName:String(v[5]||""),writer:String(v[6]||""),
+      rating,content,help,related,score,level:scoreLevel(score)};
+  }).filter(r=>!isNaN(r.year)&&r.year>2000&&r.rating>0&&r.rating<=3);
+
+  const years2=[...new Set([...years1,...p2.map(r=>r.year)])].sort();
+  const cur2=p2.filter(r=>r.year===selYear);
+  const prev2=p2.filter(r=>r.year===selYear-1);
+  const cur2M=cur2.filter(r=>r.month===activeM);
+  const prevM2=cur2.filter(r=>r.month===(activeM||1)-1);
+
+  const ytdNeg=cur2.length,ytd1=cur2.filter(r=>r.rating===1).length,ytd2=cur2.filter(r=>r.rating===2).length;
+  const prevNeg=prev2.length,yoyNeg=prevNeg>0?((ytdNeg-prevNeg)/prevNeg)*100:0;
+  const mnNeg=cur2M.length,mn1=cur2M.filter(r=>r.rating===1).length,mn2=cur2M.filter(r=>r.rating===2).length;
+  const prevMnNeg=prevM2.length,momNeg=prevMnNeg>0?((mnNeg-prevMnNeg)/prevMnNeg)*100:0;
+
+  const negTrend=Array.from({length:12},(_,i)=>{
+    const m=i+1,c=cur2.filter(r=>r.month===m),p=prev2.filter(r=>r.month===m);
+    return{month:`${m}`,cur:c.length||null,prev:p.length||null,
+      r1:c.filter(r=>r.rating===1).length||null,
+      r2:c.filter(r=>r.rating===2).length||null,
+      r3:c.filter(r=>r.rating===3).length||null};
+  });
+
+  const getCategory=name=>{
+    if(!name)return"기타";
+    const m=name.match(/T\d+/);if(m)return m[0]+" 시리즈";
+    if(name.includes("링고"))return"링고";
+    if(name.includes("아이블"))return"아이블";
+    if(name.includes("GX")||name.includes("게이밍"))return"게이밍";
+    if(name.includes("스툴")||name.includes("펑거스"))return"스툴";
+    if(name.includes("발받침")||name.includes("옷걸이")||name.includes("커버"))return"액세서리";
+    if(name.includes("좌식"))return"좌식";
+    if(name.includes("에가")||name.includes("뮤브")||name.includes("탭스퀘어")||name.includes("아띠"))return"회의/유아";
+    return"기타";
+  };
+
+  const catMap={};
+  cur2.forEach(r=>{const c=getCategory(r.prodName);catMap[c]=(catMap[c]||0)+1;});
+  const catData=Object.entries(catMap).sort((a,b)=>b[1]-a[1]).map(([cat,cnt])=>({cat,cnt}));
+  const allProds=[...new Set(cur2.map(r=>r.prodName).filter(Boolean))].sort();
+  const filtered=prodFilter.length>0?cur2.filter(r=>prodFilter.includes(r.prodName)):cur2;
+  const prodMap={};
+  filtered.forEach(r=>{const k=r.prodName||"미상";prodMap[k]=(prodMap[k]||0)+1;});
+  const prodData=Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,15)
+    .map(([prod,cnt])=>({prod:prod.replace(/\[.*?\]/g,"").trim().slice(0,22),cnt}));
+
+  const byRating={
+    1:cur2M.filter(r=>r.rating===1).sort((a,b)=>b.score-a.score),
+    2:cur2M.filter(r=>r.rating===2).sort((a,b)=>b.score-a.score),
+    3:cur2M.filter(r=>r.rating===3).sort((a,b)=>b.score-a.score),
+  };
+  const byScore=[...cur2M].sort((a,b)=>b.score-a.score);
+  const years=tab===1?years1:years2;
+  const hasMonth=m=>tab===1?cur1.some(r=>r.month===m):cur2.some(r=>r.month===m);
+
+  const sidebarItems=[{id:1,icon:"📊",label:"실적"},{id:2,icon:"💬",label:"부정후기"}];
+
+  return (
+    <div style={{display:"flex",minHeight:"100vh",background:C.bg}}>
+      {/* 사이드바 */}
+      <div style={{width:58,background:C.card,borderRight:`0.5px solid ${C.border}`,
+        display:"flex",flexDirection:"column",alignItems:"center",paddingTop:16,gap:2,
+        position:"sticky",top:0,height:"100vh",flexShrink:0}}>
+        <div style={{fontSize:13,fontWeight:900,color:C.black,marginBottom:20}}>S</div>
+        {sidebarItems.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            display:"flex",flexDirection:"column",alignItems:"center",gap:3,
+            padding:"10px 0",width:"100%",border:"none",background:"none",cursor:"pointer",
+            color:tab===t.id?C.black:"#AAA",
+            borderLeft:tab===t.id?`3px solid ${C.black}`:"3px solid transparent"}}>
+            <span style={{fontSize:18}}>{t.icon}</span>
+            <span style={{fontSize:9,fontWeight:tab===t.id?700:400}}>{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* 메인 */}
+      <div style={{flex:1,padding:"20px 24px",minWidth:0,overflowX:"hidden"}}>
+        {/* 헤더 */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
+          <div>
+            <div style={{fontSize:17,fontWeight:800,color:C.black,letterSpacing:-.5}}>
+              {tab===1?"SIDIZ 네이버 실적 대시보드":"네이버 부정후기 추이"}
+            </div>
+            <div style={{fontSize:11,color:C.gray,marginTop:2}}>Last updated: {lastUpdated||"-"}</div>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <a href={SHEET_URL} target="_blank" style={{
+              padding:"6px 12px",borderRadius:8,border:`0.5px solid ${C.border}`,
+              background:C.card,fontSize:11,color:C.black,textDecoration:"none",display:"flex",alignItems:"center",gap:4}}>
+              📋 원본 시트
+            </a>
+            <button onClick={fetchAll} style={{
+              padding:"6px 12px",borderRadius:8,border:`0.5px solid ${C.border}`,
+              background:C.card,fontSize:11,color:C.black,cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+              🔄 새로고침
+            </button>
+          </div>
+        </div>
+
+        {/* 필터바 */}
+        <div style={{display:"flex",alignItems:"center",gap:6,padding:"10px 0",flexWrap:"wrap"}}>
+          {years.map(y=>(
+            <button key={y} onClick={()=>{setSelYear(y);setSelMonth(null);}} style={{
+              padding:"4px 14px",borderRadius:20,fontSize:12,fontWeight:600,cursor:"pointer",
+              border:`1px solid ${selYear===y?C.black:C.lightGray}`,
+              background:selYear===y?C.black:"transparent",
+              color:selYear===y?"#fff":C.gray}}>
+              {y}년
+            </button>
+          ))}
+          <div style={{width:1,height:18,background:C.lightGray,margin:"0 4px"}}/>
+          {[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>{
+            const has=hasMonth(m),active=activeM===m;
+            return(
+              <button key={m} disabled={!has} onClick={()=>setSelMonth(selMonth===m?null:m)} style={{
+                padding:"4px 11px",borderRadius:20,fontSize:12,fontWeight:active?600:400,
+                cursor:has?"pointer":"default",
+                border:`1px solid ${active?C.black:C.lightGray}`,
+                background:active?C.black:"transparent",
+                color:active?"#fff":has?C.gray:"#CCC"}}>
+                {m}월
+              </button>
+            );
+          })}
+        </div>
+
+        {loading?(
+          <div style={{textAlign:"center",padding:100,color:C.gray,fontSize:14}}>
+            <div style={{fontSize:32,marginBottom:12}}>⏳</div>데이터 불러오는 중...
+          </div>
+        ):error?(
+          <div style={{textAlign:"center",padding:80,color:C.red,fontSize:13}}>
+            <div style={{fontSize:32,marginBottom:12}}>⚠️</div>{error}
+            <br/><button onClick={fetchAll} style={{marginTop:12,padding:"6px 16px",borderRadius:8,
+              border:`0.5px solid ${C.border}`,background:C.card,cursor:"pointer",fontSize:12}}>다시 시도</button>
+          </div>
+        ):tab===1?(
+          <>
+            {/* 상단 KPI */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+              <KpiCard label="YTD 누적 ERP 매출" value={fmt억(ytdERP)} icon="🎯"
+                sub={`${ytdYoY>=0?"▲":"▼"} ${Math.abs(ytdYoY).toFixed(1)}% YoY (${selYear} vs ${selYear-1})`}
+                subColor={ytdYoY>=0?C.green:C.red}/>
+              <KpiCard label="YTD 누적 목표 달성율" value={fmtPct(ytdAch)} icon="✓"
+                sub={`Target: ${fmt억(ytdTarget)}`} subColor={C.gold}/>
+              <KpiCard label="올해 평균 객단가" value={fmtWon(Math.round(avgAOV))} icon="👤"
+                sub={`${aovYoY>=0?"▲":"▼"} ${Math.abs(aovYoY).toFixed(1)}% 증감 (YoY)`}
+                subColor={aovYoY>=0?C.green:C.red}/>
+              <KpiCard label="올해 평균 환불율" value={fmtPct(avgRefRate)} icon="↩"
+                sub={`${refYoY>=0?"▲":"▼"} ${Math.abs(refYoY).toFixed(1)}%p 증감 (YoY)`}
+                subColor={refYoY<=0?C.green:C.red}/>
+            </div>
+
+            {/* 하단 KPI */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:18}}>
+              {[
+                {label:`${activeM}월 매출`,val:fmt억(curMD?.ERP),icon:"📈",
+                 sub:curMD&&prevMD&&prevMD.ERP?`${((curMD.ERP-prevMD.ERP)/prevMD.ERP*100).toFixed(1)}% 전월 대비`:"",
+                 sc:curMD&&prevMD?(curMD.ERP>=prevMD.ERP?C.green:C.red):C.gray},
+                {label:`${activeM}월 목표 달성율`,val:fmtPct(curMD?.achieve),icon:"🏆",
+                 sub:curMD&&prevMD?`${(curMD.achieve-prevMD.achieve).toFixed(1)}%p 전월 대비`:"",
+                 sc:curMD&&prevMD?(curMD.achieve>=prevMD.achieve?C.green:C.red):C.gray},
+                {label:`${activeM}월 객단가`,val:fmtWon(curMD?.aov),icon:"💰",
+                 sub:curMD&&prevMD&&prevMD.aov?`${((curMD.aov-prevMD.aov)/prevMD.aov*100).toFixed(1)}% 전월 대비`:"",
+                 sc:curMD&&prevMD?(curMD.aov>=prevMD.aov?C.green:C.red):C.gray},
+                {label:`${activeM}월 환불율`,val:fmtPct(curMD?.refundRate),icon:"↩",
+                 sub:curMD&&prevMD?`${(curMD.refundRate-prevMD.refundRate).toFixed(1)}%p 전월 대비`:"",
+                 sc:curMD&&prevMD?(curMD.refundRate<=prevMD.refundRate?C.green:C.red):C.gray},
+              ].map((k,i)=><KpiCard key={i} label={k.label} value={k.val} sub={k.sub} subColor={k.sc} icon={k.icon}/>)}
+            </div>
+
+            {/* 도넛 + 복합차트 */}
+            <div style={{display:"grid",gridTemplateColumns:"220px 1fr",gap:14,marginBottom:14}}>
+              <ChartCard title="연 목표 달성율" sub={`${selYear}년`}>
+                <svg width="160" height="160" viewBox="0 0 160 160" style={{display:"block",margin:"0 auto"}}>
+                  <circle cx="80" cy="80" r={donutR} fill="none" stroke={C.lightGray} strokeWidth={14}/>
+                  <circle cx="80" cy="80" r={donutR} fill="none" stroke={C.gold}
+                    strokeWidth={14} strokeDasharray={circ} strokeDashoffset={circ*(1-donutPct/100)}
+                    strokeLinecap="round" transform="rotate(-90 80 80)"/>
+                  <text x="80" y="74" textAnchor="middle" fontSize="20" fontWeight="800" fill={C.gold}>{donutPct.toFixed(1)}%</text>
+                  <text x="80" y="94" textAnchor="middle" fontSize="10" fill={C.gray}>Achieved</text>
+                </svg>
+                <div style={{borderTop:`0.5px solid ${C.border}`,paddingTop:10,marginTop:6}}>
+                  {[["YTD 실적",fmt억(ytdERP)],["연간 총 목표",fmt억(ytdTarget)]].map(([l,v])=>(
+                    <div key={l} style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}>
+                      <span style={{color:C.gray}}>{l}</span><span style={{fontWeight:700}}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </ChartCard>
+
+              <ChartCard title="월별 실적 vs 목표 달성" sub={`${selYear}년 ERP 매출 및 달성율`}>
+                <div style={{display:"flex",gap:14,marginBottom:10,fontSize:11,color:C.gray,flexWrap:"wrap"}}>
+                  <span><span style={{display:"inline-block",width:10,height:10,background:C.black,borderRadius:2,marginRight:4}}/>실적</span>
+                  <span><span style={{display:"inline-block",width:10,height:10,background:C.lightGray,borderRadius:2,marginRight:4}}/>목표</span>
+                  <span><span style={{display:"inline-block",width:14,borderTop:`2px dashed #CCC`,marginRight:4}}/>전년실적</span>
+                  <span><span style={{display:"inline-block",width:10,height:2,background:C.gold,borderRadius:1,marginRight:4}}/>달성율</span>
+                </div>
+                <ResponsiveContainer width="100%" height={210}>
+                  <ComposedChart data={monthChart} margin={{top:22,right:42,left:0,bottom:0}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.lightGray} vertical={false}/>
+                    <XAxis dataKey="month" tick={{fontSize:11,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis yAxisId="l" tickFormatter={v=>v?(v/1e8).toFixed(0)+"억":""} tick={{fontSize:10,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis yAxisId="r" orientation="right" tickFormatter={v=>v+"%"} tick={{fontSize:10,fill:C.gold}} axisLine={false} tickLine={false}/>
+                    <Tooltip formatter={(v,n)=>n==="달성율"?[fmtPct(v),n]:[fmt억(v),n]}
+                      contentStyle={{fontSize:12,borderRadius:8,border:`0.5px solid ${C.border}`}}/>
+                    <Bar yAxisId="l" dataKey="실적" fill={C.black} barSize={20} radius={[3,3,0,0]}
+                      label={{position:"top",fontSize:10,fill:C.gray,formatter:v=>v?(v/1e8).toFixed(1)+"억":""}}/>
+                    <Line yAxisId="l" dataKey="목표" stroke={C.lightGray} strokeWidth={2} dot={{r:3,fill:C.lightGray}}/>
+                    <Line yAxisId="l" dataKey="전년" stroke="#CCC" strokeWidth={1.5} strokeDasharray="5 3" dot={{r:2,fill:"#CCC"}} name="전년실적"/>
+                    <Line yAxisId="r" dataKey="달성율" stroke={C.gold} strokeWidth={2} dot={{r:3,fill:C.gold}}/>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            {/* 구매자 + 환불 */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+              <ChartCard title="구매자수 추이" sub={`${selYear}년 vs ${selYear-1}년`}>
+                <ResponsiveContainer width="100%" height={190}>
+                  <AreaChart data={buyerChart} margin={{top:5,right:10,left:0,bottom:0}}>
+                    <defs>
+                      <linearGradient id="g26" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={C.black} stopOpacity={.12}/><stop offset="95%" stopColor={C.black} stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="g25" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={C.lightGray} stopOpacity={.5}/><stop offset="95%" stopColor={C.lightGray} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.lightGray} vertical={false}/>
+                    <XAxis dataKey="month" tick={{fontSize:11,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis tickFormatter={v=>v?(v/1000).toFixed(0)+"k":""} tick={{fontSize:10,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <Tooltip formatter={(v,n)=>[fmtNum(v)+"명",n==="cur"?selYear+"년":(selYear-1)+"년"]}
+                      contentStyle={{fontSize:12,borderRadius:8,border:`0.5px solid ${C.border}`}}/>
+                    <Area dataKey="prev" stroke={C.lightGray} fill="url(#g25)" strokeWidth={1.5} dot={false} connectNulls name={`${selYear-1}년`}/>
+                    <Area dataKey="cur" stroke={C.black} fill="url(#g26)" strokeWidth={2} dot={{r:3,fill:C.black}} connectNulls name={`${selYear}년`}
+                      label={{fontSize:10,fill:C.gray,position:"top",formatter:v=>v?fmtNum(v):""}}/>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="환불 추이" sub="금액(막대) 및 건수(선)">
+                <div style={{display:"flex",gap:12,marginBottom:10,fontSize:11,color:C.gray}}>
+                  <span><span style={{display:"inline-block",width:10,height:10,background:C.pink,borderRadius:2,marginRight:4}}/>금액</span>
+                  <span><span style={{display:"inline-block",width:10,height:2,background:C.red,marginRight:4}}/>건수</span>
+                </div>
+                <ResponsiveContainer width="100%" height={190}>
+                  <ComposedChart data={refundChart} margin={{top:10,right:40,left:0,bottom:0}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.lightGray} vertical={false}/>
+                    <XAxis dataKey="month" tick={{fontSize:11,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis yAxisId="l" tickFormatter={v=>v?(v/1e8).toFixed(1)+"억":""} tick={{fontSize:10,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis yAxisId="r" orientation="right" tick={{fontSize:10,fill:C.red}} axisLine={false} tickLine={false}/>
+                    <Tooltip contentStyle={{fontSize:12,borderRadius:8,border:`0.5px solid ${C.border}`}}
+                      formatter={(v,n)=>n==="금액"?[fmt억(v),"환불금액"]:[fmtNum(v)+"건","환불건수"]}/>
+                    <Bar yAxisId="l" dataKey="금액" fill={C.pink} barSize={22} radius={[3,3,0,0]}
+                      label={{position:"top",fontSize:10,fill:C.gray,formatter:v=>v?fmt억(v):""}}/>
+                    <Line yAxisId="r" dataKey="건수" stroke={C.red} strokeWidth={2} dot={{r:3,fill:C.red}}
+                      label={{position:"top",fontSize:10,fill:C.red,formatter:v=>v?fmtNum(v)+"건":""}}/>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            {/* 리뷰 추이 */}
+            <ChartCard title="리뷰수 추이 및 전년비" sub={`${selYear}년 vs ${selYear-1}년 (YoY)`} style={{marginBottom:16}}>
+              <div style={{display:"flex",gap:14,marginBottom:10,fontSize:11,color:C.gray}}>
+                <span><span style={{display:"inline-block",width:10,height:10,background:C.black,borderRadius:2,marginRight:4}}/>{selYear}년</span>
+                <span><span style={{display:"inline-block",width:10,height:10,background:C.lightGray,borderRadius:2,marginRight:4}}/>{selYear-1}년</span>
+                <span><span style={{display:"inline-block",width:10,height:2,background:C.gold,borderRadius:1,marginRight:4}}/>YoY %</span>
+              </div>
+              <ResponsiveContainer width="100%" height={200}>
+                <ComposedChart data={reviewChart} margin={{top:22,right:42,left:0,bottom:0}}>
+                  <defs>
+                    <linearGradient id="gr25" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={C.lightGray} stopOpacity={.5}/><stop offset="95%" stopColor={C.lightGray} stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={C.lightGray} vertical={false}/>
+                  <XAxis dataKey="month" tick={{fontSize:11,fill:C.gray}} axisLine={false} tickLine={false}/>
+                  <YAxis yAxisId="l" tick={{fontSize:10,fill:C.gray}} axisLine={false} tickLine={false}/>
+                  <YAxis yAxisId="r" orientation="right" tickFormatter={v=>v+"%"} tick={{fontSize:10,fill:C.gold}} axisLine={false} tickLine={false}/>
+                  <Tooltip contentStyle={{fontSize:12,borderRadius:8,border:`0.5px solid ${C.border}`}}/>
+                  <ReferenceLine yAxisId="r" y={0} stroke={C.lightGray} strokeDasharray="3 3"/>
+                  <Area yAxisId="l" dataKey="prev" stroke={C.lightGray} fill="url(#gr25)" strokeWidth={1.5} dot={false} connectNulls name={`${selYear-1}년`}/>
+                  <Line yAxisId="l" dataKey="cur" stroke={C.black} strokeWidth={2} dot={{r:3,fill:C.black}} connectNulls name={`${selYear}년`}
+                    label={{position:"top",fontSize:10,fill:C.gray,formatter:v=>v?fmtNum(v):""}}/>
+                  <Line yAxisId="r" dataKey="yoy" stroke={C.gold} strokeWidth={2}
+                    dot={(props)=>{const{cx,cy,value}=props;return React.createElement("circle",{key:cx,cx,cy,r:4,fill:value>=0?C.green:C.red});}}
+                    connectNulls name="YoY%"/>
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartCard>
+          </>
+        ):(
+          <>
+            {/* TAB2 상단 KPI */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:10}}>
+              <KpiCard label={`${selYear}년 총 부정후기`} value={fmtNum(ytdNeg)+"건"} icon="💬"
+                sub={`${yoyNeg>=0?"▲":"▼"} ${Math.abs(yoyNeg).toFixed(1)}% YoY`} subColor={yoyNeg<=0?C.green:C.red}/>
+              <KpiCard label={`${selYear}년 1점 누적`} value={fmtNum(ytd1)+"건"} icon="⭐"
+                sub={`전체의 ${ytdNeg?(ytd1/ytdNeg*100).toFixed(1):0}%`} subColor={C.red}/>
+              <KpiCard label={`${selYear}년 2점 누적`} value={fmtNum(ytd2)+"건"} icon="⭐"
+                sub={`전체의 ${ytdNeg?(ytd2/ytdNeg*100).toFixed(1):0}%`} subColor={C.gold}/>
+              <KpiCard label="전년비 증감" value={`${yoyNeg>=0?"+":""}${yoyNeg.toFixed(1)}%`} icon="📉"
+                sub={`${selYear-1}년 ${fmtNum(prevNeg)}건 → ${selYear}년 ${fmtNum(ytdNeg)}건`} subColor={yoyNeg<=0?C.green:C.red}/>
+            </div>
+
+            {/* TAB2 하단 KPI */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:18}}>
+              <KpiCard label={`${activeM}월 총 부정후기`} value={fmtNum(mnNeg)+"건"} icon="📋"
+                sub={`${momNeg>=0?"▲":"▼"} ${Math.abs(momNeg).toFixed(1)}% 전월 대비`} subColor={momNeg<=0?C.green:C.red}/>
+              <KpiCard label={`${activeM}월 1점`} value={fmtNum(mn1)+"건"} icon="🔴"
+                sub={`월내 ${mnNeg?(mn1/mnNeg*100).toFixed(1):0}%`} subColor={C.red}/>
+              <KpiCard label={`${activeM}월 2점`} value={fmtNum(mn2)+"건"} icon="🟡"
+                sub={`월내 ${mnNeg?(mn2/mnNeg*100).toFixed(1):0}%`} subColor={C.gold}/>
+              <KpiCard label="전월비 증감" value={`${momNeg>=0?"+":""}${momNeg.toFixed(1)}%`} icon="📊"
+                sub={`전월 ${fmtNum(prevMnNeg)}건 → 이번달 ${fmtNum(mnNeg)}건`} subColor={momNeg<=0?C.green:C.red}/>
+            </div>
+
+            {/* 차트 row1 */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+              <ChartCard title="총 부정후기 추이" sub={`3점 이하 — ${selYear}년 vs ${selYear-1}년`}>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={negTrend} margin={{top:5,right:10,left:0,bottom:0}}>
+                    <defs>
+                      <linearGradient id="gn26" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={C.black} stopOpacity={.12}/><stop offset="95%" stopColor={C.black} stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="gn25" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={C.lightGray} stopOpacity={.5}/><stop offset="95%" stopColor={C.lightGray} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.lightGray} vertical={false}/>
+                    <XAxis dataKey="month" tick={{fontSize:11,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis tick={{fontSize:10,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <Tooltip contentStyle={{fontSize:12,borderRadius:8,border:`0.5px solid ${C.border}`}}/>
+                    <Area dataKey="prev" stroke={C.lightGray} fill="url(#gn25)" strokeWidth={1.5} dot={false} connectNulls name={`${selYear-1}년`}/>
+                    <Area dataKey="cur" stroke={C.black} fill="url(#gn26)" strokeWidth={2} dot={{r:3,fill:C.black}} connectNulls name={`${selYear}년`}
+                      label={{position:"top",fontSize:10,fill:C.gray,formatter:v=>v||""}}/>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <ChartCard title="월별 평점별 부정후기" sub={`${selYear}년 1·2·3점`}>
+                <div style={{display:"flex",gap:12,marginBottom:10,fontSize:11,color:C.gray}}>
+                  {[["1점",C.red],["2점","#4A90D9"],["3점",C.gold]].map(([l,col])=>(
+                    <span key={l}><span style={{display:"inline-block",width:8,height:8,background:col,borderRadius:"50%",marginRight:4}}/>{l}</span>
+                  ))}
+                </div>
+                <ResponsiveContainer width="100%" height={200}>
+                  <ComposedChart data={negTrend} margin={{top:5,right:10,left:0,bottom:0}}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={C.lightGray} vertical={false}/>
+                    <XAxis dataKey="month" tick={{fontSize:11,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <YAxis tick={{fontSize:10,fill:C.gray}} axisLine={false} tickLine={false}/>
+                    <Tooltip contentStyle={{fontSize:12,borderRadius:8,border:`0.5px solid ${C.border}`}}/>
+                    <Line dataKey="r1" stroke={C.red} strokeWidth={2} dot={{r:3,fill:C.red}} connectNulls name="1점"/>
+                    <Line dataKey="r2" stroke="#4A90D9" strokeWidth={2} dot={{r:3,fill:"#4A90D9"}} connectNulls name="2점"/>
+                    <Line dataKey="r3" stroke={C.gold} strokeWidth={2} dot={{r:3,fill:C.gold}} connectNulls name="3점"/>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartCard>
+            </div>
+
+            {/* 카테고리 + 상품 */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+              <ChartCard title="카테고리별 부정후기" sub={`${selYear}년 누적`}>
+                {catData.length?catData.map((d,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                    <div style={{fontSize:11,color:C.gray,width:80,flexShrink:0}}>{d.cat}</div>
+                    <div style={{flex:1,height:6,background:C.lightGray,borderRadius:3,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${(d.cnt/catData[0].cnt)*100}%`,background:C.black,borderRadius:3}}/>
+                    </div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.black,width:28,textAlign:"right"}}>{d.cnt}</div>
+                  </div>
+                )):<div style={{color:C.gray,fontSize:12,padding:"20px 0",textAlign:"center"}}>데이터 없음</div>}
+              </ChartCard>
+
+              <ChartCard title="상품별 부정후기" sub={`${selYear}년 — 드롭다운 필터`}>
+                <div style={{position:"relative",marginBottom:10}}>
+                  <button onClick={()=>setDropOpen(!dropOpen)} style={{
+                    width:"100%",padding:"7px 12px",borderRadius:8,border:`0.5px solid ${C.border}`,
+                    background:"#FAF8F3",fontSize:11,color:C.black,cursor:"pointer",
+                    textAlign:"left",display:"flex",justifyContent:"space-between"}}>
+                    <span>{prodFilter.length?`${prodFilter.length}개 선택됨`:"전체 상품"}</span>
+                    <span>{dropOpen?"▲":"▼"}</span>
+                  </button>
+                  {dropOpen&&(
+                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:C.card,
+                      border:`0.5px solid ${C.border}`,borderRadius:8,maxHeight:180,overflowY:"auto",zIndex:100,
+                      boxShadow:"0 4px 12px rgba(0,0,0,0.08)"}}>
+                      <div style={{padding:"6px 12px",borderBottom:`0.5px solid ${C.border}`}}>
+                        <label style={{fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+                          <input type="checkbox" checked={prodFilter.length===0} onChange={()=>setProdFilter([])}/>전체
+                        </label>
+                      </div>
+                      {allProds.map((p,i)=>(
+                        <div key={i} style={{padding:"5px 12px"}}>
+                          <label style={{fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+                            <input type="checkbox" checked={prodFilter.includes(p)}
+                              onChange={()=>setProdFilter(prev=>prev.includes(p)?prev.filter(x=>x!==p):[...prev,p])}/>
+                            {p.replace(/\[.*?\]/g,"").trim().slice(0,30)}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {prodData.length?prodData.map((d,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:7}}>
+                    <div style={{fontSize:10,color:C.gray,width:110,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{d.prod}</div>
+                    <div style={{flex:1,height:6,background:C.lightGray,borderRadius:3,overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${(d.cnt/(prodData[0]?.cnt||1))*100}%`,background:C.black,borderRadius:3}}/>
+                    </div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.black,width:24,textAlign:"right"}}>{d.cnt}</div>
+                  </div>
+                )):<div style={{color:C.gray,fontSize:12,padding:"20px 0",textAlign:"center"}}>데이터 없음</div>}
+              </ChartCard>
+            </div>
+
+            {/* 부정후기 원본 */}
+            <ChartCard title="부정후기 원본 목록" sub={`${activeM}월 — 평점별 탭 / 영향력 점수 순`} style={{marginBottom:24}}>
+              <div style={{display:"flex",gap:0,marginBottom:16,borderBottom:`0.5px solid ${C.border}`}}>
+                {[[1,"1점"],[2,"2점"],[3,"3점"],[99,"영향력 높은 순"]].map(([r,l])=>(
+                  <button key={r} onClick={()=>setT2Tab(r)} style={{
+                    padding:"6px 14px",fontSize:12,fontWeight:t2Tab===r?700:400,
+                    border:"none",background:"none",cursor:"pointer",
+                    color:t2Tab===r?C.black:C.gray,
+                    borderBottom:t2Tab===r?`2px solid ${C.black}`:"2px solid transparent"}}>
+                    {r===99?l:`${l} (${(byRating[r]||[]).length}건)`}
+                  </button>
+                ))}
+              </div>
+              <div style={{maxHeight:420,overflowY:"auto",display:"flex",flexDirection:"column",gap:8}}>
+                {(t2Tab===99?byScore:byRating[t2Tab]||[]).map((rv,i)=>(
+                  <div key={i} style={{padding:"12px 14px",borderRadius:10,
+                    background:levelBg[rv.level]||C.bg,border:`0.5px solid ${C.border}`}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                        <span style={{fontSize:12,fontWeight:700,color:rv.rating===1?C.red:rv.rating===2?C.gold:C.gray}}>
+                          {"★".repeat(rv.rating)}{"☆".repeat(3-rv.rating)} {rv.rating}점
+                        </span>
+                        <span style={{fontSize:11,color:C.gray}}>{rv.writer}</span>
+                        <span style={{fontSize:11,color:C.gray}}>{rv.date}</span>
+                        {rv.help>0&&<span style={{fontSize:11,color:C.gray}}>도움 {rv.help}</span>}
+                      </div>
+                      <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10,flexShrink:0,
+                        background:levelBg[rv.level],color:levelColor[rv.level],
+                        border:`0.5px solid ${levelColor[rv.level]}50`}}>
+                        {rv.level} {rv.score}점
+                      </span>
+                    </div>
+                    <div style={{fontSize:12,color:C.black,lineHeight:1.65,marginBottom:4}}>{rv.content}</div>
+                    <div style={{fontSize:10,color:C.gray,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{rv.prodName}</div>
+                  </div>
+                ))}
+                {(t2Tab===99?byScore:byRating[t2Tab]||[]).length===0&&(
+                  <div style={{textAlign:"center",padding:40,color:C.gray,fontSize:13}}>해당 월 데이터가 없습니다</div>
+                )}
+              </div>
+            </ChartCard>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
