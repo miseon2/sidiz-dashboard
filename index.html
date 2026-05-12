@@ -240,7 +240,7 @@ function parseTab2(){
 function buildFilterBar(){
   const p1=parseTab1(); const p2=parseTab2();
   const years=[...new Set([...p1.map(r=>r.year),...p2.map(r=>r.year)])].sort();
-  const cur=currentTab===1?p1.filter(r=>r.year===selYear):p2.filter(r=>r.year===selYear);
+  const cur=currentTab===1?p1.filter(r=>r.year===selYear&&r.ERP>0):p2.filter(r=>r.year===selYear);
   const activeM=selMonth||getLatestMonth(p1);
 
   let html='';
@@ -257,7 +257,7 @@ function buildFilterBar(){
 }
 
 function getLatestMonth(data){
-  const cur=data.filter(r=>r.year===selYear);
+  const cur=data.filter(r=>r.year===selYear&&r.ERP>0);
   const months=cur.map(r=>r.month).filter(m=>!isNaN(m));
   return months.length?Math.max(...months):null;
 }
