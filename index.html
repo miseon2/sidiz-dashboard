@@ -5,214 +5,329 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SIDIZ 네이버 대시보드</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#FAF8F3;display:flex;min-height:100vh}
-button{font-family:inherit;cursor:pointer}
-a{text-decoration:none}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-thumb{background:#D0CCC4;border-radius:2px}
-
-/* 사이드바 */
-#sidebar{width:58px;background:#fff;border-right:0.5px solid #EEEBE4;display:flex;flex-direction:column;align-items:center;padding-top:16px;gap:2px;position:fixed;top:0;left:0;height:100vh;z-index:100}
-#sidebar .logo{font-size:13px;font-weight:900;color:#1A1A1A;margin-bottom:20px}
-#sidebar .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;width:100%;border:none;background:none;color:#AAA;border-left:3px solid transparent;transition:all .15s}
-#sidebar .nav-btn.active{color:#1A1A1A;border-left:3px solid #1A1A1A}
-#sidebar .nav-btn span.icon{font-size:18px}
-#sidebar .nav-btn span.lbl{font-size:9px;font-weight:400}
-#sidebar .nav-btn.active span.lbl{font-weight:700}
-
-/* 메인 */
-#main{margin-left:58px;flex:1;padding:20px 24px;min-width:0}
-
-/* 헤더 */
-.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
-.header-title{font-size:17px;font-weight:800;color:#1A1A1A;letter-spacing:-.5px}
-.header-sub{font-size:11px;color:#888;margin-top:2px}
-.header-btns{display:flex;gap:8px}
-.hbtn{padding:6px 12px;border-radius:8px;border:0.5px solid #EEEBE4;background:#fff;font-size:11px;color:#1A1A1A;display:flex;align-items:center;gap:4px}
-
-/* 필터바 */
-.filter-bar{display:flex;align-items:center;gap:6px;padding:10px 0;flex-wrap:wrap}
-.filter-bar .divider{width:1px;height:18px;background:#E8E4DC;margin:0 4px}
-.fbtn{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:400;border:1px solid #E8E4DC;background:transparent;color:#888;transition:all .15s}
-.fbtn.active{background:#1A1A1A;border-color:#1A1A1A;color:#fff;font-weight:600}
-.fbtn:disabled{color:#CCC;cursor:default}
-
-/* KPI 그리드 */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
-.kpi-card{background:#fff;border-radius:14px;padding:18px 20px;border:0.5px solid #EEEBE4}
-.kpi-card .kpi-header{display:flex;justify-content:space-between;margin-bottom:8px}
-.kpi-card .kpi-label{font-size:11px;color:#888;font-weight:500}
-.kpi-card .kpi-icon{font-size:15px;opacity:.35}
-.kpi-card .kpi-value{font-size:24px;font-weight:800;color:#1A1A1A;letter-spacing:-.5px;line-height:1}
-.kpi-card .kpi-sub{font-size:11px;color:#888;margin-top:6px;font-weight:500}
-
-/* 차트 카드 */
-.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.chart-grid-donut{display:grid;grid-template-columns:220px 1fr;gap:14px;margin-bottom:14px}
-.chart-card{background:#fff;border-radius:14px;padding:18px 20px;border:0.5px solid #EEEBE4}
-.chart-card.full{margin-bottom:14px}
-.chart-title{font-size:14px;font-weight:700;color:#1A1A1A;margin-bottom:2px}
-.chart-sub{font-size:11px;color:#888;margin-bottom:14px}
-.legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#888}
-.legend-dot{width:8px;height:8px;border-radius:50%}
-.legend-rect{width:10px;height:10px;border-radius:2px}
-.legend-line{width:14px;height:2px;border-radius:1px}
-.legend-dash{width:14px;border-top:2px dashed #CCC}
-
-/* 도넛 */
-.donut-wrap{text-align:center;margin-bottom:10px}
-.donut-info{border-top:0.5px solid #EEEBE4;padding-top:10px}
-.donut-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
-.donut-row span:first-child{color:#888}
-.donut-row span:last-child{font-weight:700}
-
-/* 바 차트 (카테고리) */
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.bar-label{font-size:11px;color:#888;width:80px;flex-shrink:0}
-.bar-track{flex:1;height:6px;background:#E8E4DC;border-radius:3px;overflow:hidden}
-.bar-fill{height:100%;background:#1A1A1A;border-radius:3px;transition:width .4s}
-.bar-val{font-size:11px;font-weight:700;color:#1A1A1A;width:28px;text-align:right}
-
-/* 드롭다운 */
-.dropdown-wrap{position:relative;margin-bottom:10px}
-.dropdown-btn{width:100%;padding:7px 12px;border-radius:8px;border:0.5px solid #EEEBE4;background:#FAF8F3;font-size:11px;color:#1A1A1A;text-align:left;display:flex;justify-content:space-between}
-.dropdown-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:0.5px solid #EEEBE4;border-radius:8px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,.08);display:none}
-.dropdown-list.open{display:block}
-.dropdown-item{padding:5px 12px;font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer}
-.dropdown-item:hover{background:#FAF8F3}
-
-/* 리뷰 탭 */
-.review-tabs{display:flex;border-bottom:0.5px solid #EEEBE4;margin-bottom:14px}
-.rtab{padding:6px 14px;font-size:12px;font-weight:400;border:none;background:none;color:#888;border-bottom:2px solid transparent}
-.rtab.active{font-weight:700;color:#1A1A1A;border-bottom:2px solid #1A1A1A}
-.review-list{max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
-.review-item{padding:12px 14px;border-radius:10px;border:0.5px solid #EEEBE4}
-.review-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px}
-.review-meta-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.review-rating{font-size:12px;font-weight:700}
-.review-writer{font-size:11px;color:#888}
-.review-date{font-size:11px;color:#888}
-.review-help{font-size:11px;color:#888}
-.score-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0}
-.review-content{font-size:12px;color:#1A1A1A;line-height:1.65;margin-bottom:4px}
-.review-prod{font-size:10px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* 탭 페이지 */
-.page{display:none}
-.page.active{display:block}
-
-/* 로딩/에러 */
-.loading{text-align:center;padding:100px;color:#888;font-size:14px}
-.loading .icon{font-size:32px;margin-bottom:12px}
-.error{text-align:center;padding:80px;color:#E53E3E;font-size:13px}
-.retry-btn{margin-top:12px;padding:6px 16px;border-radius:8px;border:0.5px solid #EEEBE4;background:#fff;cursor:pointer;font-size:12px}
-
-.green{color:#2F855A}.red{color:#E53E3E}.gold{color:#C9A84C}
+body,*{font-family:'Inter','Apple SD Gothic Neo',sans-serif}
+:root{
+  --bg:#F8F8F8;--card:#fff;--sb:#fff;
+  --y:#FFD66B;--yd:#B8860B;
+  --dark:#111;--g1:#666;--g2:#999;--g3:#E8E8E8;--g4:#F5F5F5;
+  --rd:#D93030;--gn:#1A8A5A;--go:#A07000;
+  --sh:0 2px 12px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.03);
+  --sh2:0 4px 20px rgba(0,0,0,0.09);
+  --r:16px;
+}
+body{background:var(--bg);min-height:100vh}
+.wrap{display:flex;min-height:100vh;background:var(--bg)}
+.sb{width:54px;background:var(--sb);border-right:1px solid #EBEBEB;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb-logo{width:30px;height:30px;background:var(--y);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:12px;box-shadow:0 2px 8px rgba(255,214,107,0.4)}
+.nb{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border:none;background:none;cursor:pointer;color:#CCC;position:relative;transition:all .15s;font-size:18px}
+.nb.on{color:var(--dark)}
+.nb.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:22px;background:var(--y);border-radius:0 3px 3px 0}
+.main{flex:1;margin-left:54px;min-width:0;overflow-y:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid #F0F0F0;position:sticky;top:0;z-index:50}
+.page-title{font-size:14px;font-weight:700;color:var(--dark);letter-spacing:-.3px}
+.page-sub{font-size:10px;color:var(--g2);margin-top:1px}
+.hbtns{display:flex;gap:5px}
+.hbtn{width:30px;height:30px;border-radius:9px;border:1px solid #EBEBEB;background:#fff;font-size:13px;color:var(--g2);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);font-weight:700;text-decoration:none}
+.hbtn:hover{color:var(--dark)}
+.content{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.fblock{background:#fff;border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:5px}
+.frow{display:flex;align-items:center;gap:4px}
+.flbl{font-size:10px;font-weight:400;color:var(--g2);width:28px;flex-shrink:0}
+.fp{padding:4px 13px;border-radius:99px;font-size:11px;font-weight:500;border:none;background:var(--g4);color:var(--g2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+.fp.on{background:var(--dark);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-weight:600}
+.fp.yon{background:var(--y);color:var(--dark);font-weight:700;box-shadow:0 2px 10px rgba(255,214,107,0.4)}
+.fp:disabled{color:#D8D8D8;cursor:default;background:transparent}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.kc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5;position:relative;overflow:hidden;transition:transform .15s}
+.kc:hover{transform:translateY(-1px);box-shadow:var(--sh2)}
+.kc.hl::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;background:radial-gradient(circle at top right,rgba(255,214,107,0.18),transparent 70%);pointer-events:none}
+.k-lbl{font-size:10px;color:var(--g2);font-weight:400;margin-bottom:7px}
+.k-val{font-size:24px;font-weight:300;color:var(--dark);letter-spacing:-1px;line-height:1;margin-bottom:6px}
+.k-val .u{font-size:13px;font-weight:400;margin-left:1px}
+.k-sub{font-size:10px;font-weight:500}
+.rd{color:var(--rd)}.gn{color:var(--gn)}.go{color:var(--go)}.gy{color:var(--g2)}
+.cgrid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.cgridd{display:grid;grid-template-columns:175px 1fr;gap:11px}
+.cc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5}
+.ctit{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:2px}
+.csub{font-size:10px;color:var(--g2);margin-bottom:8px}
+.leg{display:flex;gap:10px;margin-bottom:7px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g2)}
+.lr{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.ll{width:12px;height:2px;border-radius:1px;flex-shrink:0}
+.ld{width:12px;border-top:2px dashed #C8C8C8;flex-shrink:0;display:inline-block}
+.donut-cc{display:flex;flex-direction:column;justify-content:space-between}
+.donut-mid{display:flex;align-items:center;justify-content:center;flex:1;padding:8px 0}
+.dinfo{border-top:1px solid #F0F0F0;padding-top:8px;margin-top:4px}
+.drow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:var(--g2)}
+.drow span:last-child{font-weight:600;color:var(--dark)}
+.brow{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.blbl{font-size:10px;color:var(--g2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btrack{flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden}
+.bfill{height:100%;border-radius:99px}
+.bval{font-size:10px;font-weight:600;color:var(--dark);width:22px;text-align:right}
+.ddwrap{position:relative;margin-bottom:10px}
+.ddbtn{width:100%;padding:7px 12px;border-radius:10px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:11px;color:var(--dark);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center}
+.ddlist{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
+.ddlist.open{display:block}
+.dditem{padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark)}
+.dditem:hover{background:#F8F8F8}
+.dditem input{accent-color:var(--dark)}
+.top3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.top3-card{background:#FAFAFA;border-radius:12px;padding:14px 16px;border:1px solid #F0F0F0}
+.top3-rank{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.top3-rank-num{width:22px;height:22px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.top3-score{font-size:22px;font-weight:300;color:var(--dark);letter-spacing:-1px;margin-bottom:4px}
+.top3-score .u{font-size:12px;font-weight:400}
+.top3-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:8px}
+.top3-content{font-size:11px;color:#333;line-height:1.65;margin-bottom:8px;word-break:keep-all}
+.top3-meta{font-size:10px;color:var(--g2)}
+.top3-prod{font-size:10px;color:var(--g2);margin-top:2px}
+.rv-table{width:100%;border-collapse:collapse}
+.rv-table thead th{font-size:10px;font-weight:600;color:var(--g2);padding:6px 10px;border-bottom:1px solid #F0F0F0;text-align:left;background:#FAFAFA}
+.rv-table tbody tr{border-bottom:1px solid #F8F8F8;transition:background .1s}
+.rv-table tbody tr:hover{background:#FAFAFA}
+.rv-table td{font-size:11px;color:var(--dark);padding:8px 10px;vertical-align:top}
+.rv-pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap}
+.info-wrap{position:relative;display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle}
+.info-icon{width:16px;height:16px;border-radius:50%;background:#E8E8E8;color:#888;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;font-style:italic;line-height:1;flex-shrink:0;transition:background .12s}
+.info-icon:hover{background:#D0D0D0;color:#444}
+.info-tooltip{display:none;position:absolute;left:22px;top:50%;transform:translateY(-50%);background:#1A1A1A;color:#F0F0F0;font-size:10px;line-height:1.8;padding:10px 14px;border-radius:10px;width:280px;box-shadow:0 6px 20px rgba(0,0,0,0.18);z-index:200;pointer-events:none;white-space:normal}
+.info-tooltip::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1A1A1A;border-left:0}
+.info-wrap:hover .info-tooltip{display:block}
+.ctit-row{display:flex;align-items:center;margin-bottom:2px}
+.pg{display:none}.pg.on{display:flex;flex-direction:column;gap:12px}
 </style>
 </head>
 <body>
-
-<!-- 사이드바 -->
-<div id="sidebar">
-  <div class="logo">S</div>
-  <button class="nav-btn active" onclick="switchTab(1)" id="nav1">
-    <span class="icon">📊</span><span class="lbl">실적</span>
-  </button>
-  <button class="nav-btn" onclick="switchTab(2)" id="nav2">
-    <span class="icon">💬</span><span class="lbl">부정후기</span>
-  </button>
-</div>
-
-<!-- 메인 -->
-<div id="main">
-  <!-- 헤더 -->
-  <div class="header">
-    <div>
-      <div class="header-title" id="page-title">SIDIZ 네이버 실적 대시보드</div>
-      <div class="header-sub" id="last-updated">Last updated: -</div>
-    </div>
-    <div class="header-btns">
-      <a class="hbtn" href="https://docs.google.com/spreadsheets/d/1UyoOkvJMY8kTLAZzjw6PoYw6J_YWrfakcP9iEvCUrQs" target="_blank">📋 원본 시트</a>
-      <button class="hbtn" onclick="fetchAll()">🔄 새로고침</button>
-    </div>
+<div class="wrap">
+  <div class="sb">
+    <div class="sb-logo">S</div>
+    <button class="nb on" onclick="sw(1)" id="n1" title="실적 대시보드">📊</button>
+    <button class="nb" onclick="sw(2)" id="n2" title="부정후기 추이">💬</button>
   </div>
 
-  <!-- 필터바 -->
-  <div class="filter-bar" id="filter-bar"></div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="ptit">SIDIZ 네이버 실적 대시보드</div>
+        <div class="page-sub" id="last-updated">Last updated: -</div>
+      </div>
+      <div class="hbtns">
+        <button class="hbtn" onclick="fetchAll()" title="새로고침">↺</button>
+        <a class="hbtn" href="https://docs.google.com/spreadsheets/d/1UyoOkvJMY8kTLAZzjw6PoYw6J_YWrfakcP9iEvCUrQs" target="_blank" title="원본 시트" style="font-size:10px">↗</a>
+      </div>
+    </div>
 
-  <!-- 탭1 -->
-  <div class="page active" id="tab1-page">
-    <div id="tab1-content"></div>
-  </div>
+    <!-- TAB1 -->
+    <div class="pg on" id="p1">
+      <div class="content">
+        <div class="fblock">
+          <div class="frow"><span class="flbl">연도</span><div id="yr-btns1"></div></div>
+          <div class="frow"><span class="flbl">월</span><div id="mo-btns1" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+        </div>
+        <div class="kgrid" id="kpi1-top"></div>
+        <div class="kgrid" id="kpi1-bot"></div>
+        <div class="cgridd">
+          <div class="cc donut-cc">
+            <div><div class="ctit">연 목표 달성율</div><div class="csub" id="donut-sub">2026년</div></div>
+            <div class="donut-mid">
+              <svg width="150" height="150" viewBox="0 0 150 150" style="overflow:visible">
+                <defs>
+                  <filter id="dsh" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="3" dy="4" stdDeviation="5" flood-color="rgba(0,0,0,0.12)"/>
+                  </filter>
+                  <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FFD66B"/><stop offset="100%" stop-color="#FF8C00" stop-opacity=".85"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="75" cy="75" r="55" fill="none" stroke="#DCDCDC" stroke-width="11"/>
+                <circle id="donut-arc" cx="75" cy="75" r="55" fill="none" stroke="url(#dg)" stroke-width="11"
+                  stroke-dasharray="345.4" stroke-dashoffset="235" stroke-linecap="round"
+                  transform="rotate(-90 75 75)" filter="url(#dsh)"/>
+                <text id="donut-pct" x="75" y="70" text-anchor="middle" dominant-baseline="middle" font-size="19" font-weight="700" fill="#111" font-family="Inter,sans-serif">-</text>
+                <text x="75" y="87" text-anchor="middle" font-size="9" fill="#AAA" font-family="Inter,sans-serif">Achieved</text>
+              </svg>
+            </div>
+            <div class="dinfo">
+              <div class="drow"><span>YTD 실적</span><span id="donut-ytd">-</span></div>
+              <div class="drow"><span>연간 총 목표</span><span id="donut-target">-</span></div>
+            </div>
+          </div>
+          <div class="cc">
+            <div class="ctit">월별 실적 vs 목표 달성</div>
+            <div class="csub">목표(배경) + 실적(막대) + 달성율(선)</div>
+            <div class="leg">
+              <div class="li"><div class="lr" style="background:#111"></div>실적</div>
+              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div>목표(배경)</div>
+              <div class="li"><div class="ld"></div>전년실적</div>
+              <div class="li"><div class="lr" style="background:#FFD66B"></div>달성율</div>
+            </div>
+            <div style="position:relative;height:155px"><canvas id="c1"></canvas></div>
+          </div>
+        </div>
+        <div class="cgrid2">
+          <div class="cc">
+            <div class="ctit">구매자수 추이</div><div class="csub" id="buyer-sub">2026 vs 2025년</div>
+            <div class="leg">
+              <div class="li"><div class="ll" style="background:#111"></div><span id="buyer-lbl1">2026년</span></div>
+              <div class="li"><div class="ld"></div><span id="buyer-lbl2">2025년</span></div>
+            </div>
+            <div style="position:relative;height:145px"><canvas id="c2"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="ctit">환불 추이</div><div class="csub">금액(막대) 및 건수(선)</div>
+            <div class="leg">
+              <div class="li"><div class="lr" style="background:#D0D0D0"></div>금액</div>
+              <div class="li"><div class="ll" style="background:#111"></div>건수</div>
+            </div>
+            <div style="position:relative;height:145px"><canvas id="c3"></canvas></div>
+          </div>
+        </div>
+        <div class="cc" style="margin-bottom:4px">
+          <div class="ctit">리뷰수 추이 및 전년비</div><div class="csub" id="review-sub">2026 vs 2025년 (YoY)</div>
+          <div class="leg">
+            <div class="li"><div class="ll" style="background:#111"></div><span id="rev-lbl1">2026년</span></div>
+            <div class="li"><div class="ld"></div><span id="rev-lbl2">2025년</span></div>
+            <div class="li"><div class="lr" style="background:#FFD66B"></div>YoY %</div>
+          </div>
+          <div style="position:relative;height:135px"><canvas id="c4"></canvas></div>
+        </div>
+      </div>
+    </div>
 
-  <!-- 탭2 -->
-  <div class="page" id="tab2-page">
-    <div id="tab2-content"></div>
+    <!-- TAB2 -->
+    <div class="pg" id="p2">
+      <div class="content">
+        <div class="fblock">
+          <div class="frow"><span class="flbl">연도</span><div id="yr-btns2"></div></div>
+          <div class="frow"><span class="flbl">월</span><div id="mo-btns2" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+        </div>
+        <div class="kgrid" id="kpi2-top"></div>
+        <div class="kgrid" id="kpi2-bot"></div>
+        <div class="cgrid2">
+          <div class="cc">
+            <div class="ctit">총 부정후기 추이</div><div class="csub" id="neg-sub">2026년(선) vs 2025년(배경)</div>
+            <div class="leg">
+              <div class="li"><div class="ll" style="background:#111"></div><span id="neg-lbl1">2026년</span></div>
+              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div><span id="neg-lbl2">2025년</span></div>
+            </div>
+            <div style="position:relative;height:148px"><canvas id="c5"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="ctit">월별 평점별 부정후기</div><div class="csub" id="rating-sub">2026년 1·2·3점</div>
+            <div class="leg">
+              <div class="li"><div class="ll" style="background:#D93030"></div>1점</div>
+              <div class="li"><div class="ll" style="background:#4A90D9"></div>2점</div>
+              <div class="li"><div class="ll" style="background:#BBB"></div>3점</div>
+            </div>
+            <div style="position:relative;height:148px"><canvas id="c6"></canvas></div>
+          </div>
+        </div>
+        <div class="cgrid2">
+          <div class="cc">
+            <div class="ctit">카테고리별 부정후기</div><div class="csub" id="cat-sub">2026년 누적</div>
+            <div id="cats" style="margin-top:6px"></div>
+          </div>
+          <div class="cc">
+            <div class="ctit">상품별 월별 부정후기 추이</div><div class="csub">상품 선택 후 선그래프 확인</div>
+            <div class="ddwrap">
+              <button class="ddbtn" onclick="toggleDd()"><span id="ddlbl">전체 상품 선택</span><span id="ddarr">▼</span></button>
+              <div class="ddlist" id="ddlist"></div>
+            </div>
+            <div style="position:relative;height:120px"><canvas id="c7"></canvas></div>
+          </div>
+        </div>
+        <div class="cc">
+          <div class="ctit">🔥 이번달 영향력 Top 3 부정후기</div>
+          <div class="csub" id="top3-sub">— 영향력 점수 기준</div>
+          <div class="top3-grid" id="top3"></div>
+        </div>
+        <div class="cc" style="margin-bottom:4px">
+          <div class="ctit-row">
+            <span class="ctit" id="rv-title">부정후기 전체 목록</span>
+            <div class="info-wrap">
+              <div class="info-icon">i</div>
+              <div class="info-tooltip">
+                <strong style="color:#FFD66B;display:block;margin-bottom:6px">영향력 점수 산정 기준</strong>
+                · 평점 (×2): 1점→+6 / 2점→+4 / 3점→+2<br>
+                · 도움수: 도움수 그대로 합산 (예: 12개→+12)<br>
+                · 관련 리뷰 있음: +5<br>
+                · 글자수: 50자↑→+5 / 30~49자→+3 / 30자 미만→+1<br>
+                <span style="color:#888;display:block;margin-top:6px">등급: 낮음(≤5) · 보통(6~10) · 높음(11~15) · 심각(16↑)</span>
+              </div>
+            </div>
+          </div>
+          <div class="csub">영향력 점수 높은 순 정렬</div>
+          <table class="rv-table">
+            <thead>
+              <tr>
+                <th style="width:36px">순위</th>
+                <th style="width:46px">평점</th>
+                <th style="width:50px">영향력</th>
+                <th style="width:50px">등급</th>
+                <th style="width:46px">도움수</th>
+                <th>리뷰 내용 (전문)</th>
+                <th style="width:90px">상품</th>
+              </tr>
+            </thead>
+            <tbody id="rv-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbw48_cTrcAG14Y-reW6anXa4RZafUGUdunvdkyH1J4dVyaIaOK8kJI0U4odKXz8Pypseg/exec";
-const GID1 = "543240057", GID2 = "1006983265";
+const API='https://script.google.com/macros/s/AKfycbw48_cTrcAG14Y-reW6anXa4RZafUGUdunvdkyH1J4dVyaIaOK8kJI0U4odKXz8Pypseg/exec';
+const GID1='543240057',GID2='1006983265';
+const Y='#FFD66B',YD='#B8860B';
+let tab1Raw=[],tab2Raw=[],selYear=2026,selMonth=null,charts={};
 
-let tab1Raw=[], tab2Raw=[], selYear=2026, selMonth=null, currentTab=1;
-let charts={};
+const fmt억=v=>{const n=Number(v);return isNaN(n)||!v?'-':(n/1e8).toFixed(1)+'억';};
+const fmtPct=v=>{const n=parseFloat(v);return isNaN(n)?'-':n.toFixed(1)+'%';};
+const fmtWon=v=>{const n=Number(v);return isNaN(n)||!v?'-':n.toLocaleString('ko-KR')+'원';};
+const fmtNum=v=>(!v&&v!==0)?'-':Number(v).toLocaleString('ko-KR');
+const toN=x=>parseFloat(String(x).replace(/[,\s%]/g,''))||0;
 
-// ── 유틸 ──────────────────────────────────────────────────────
-const fmt억=v=>{const n=Number(v);return isNaN(n)||!v?"-":(n/1e8).toFixed(1)+"억";};
-const fmtPct=v=>{const n=parseFloat(v);return isNaN(n)?"-":n.toFixed(1)+"%";};
-const fmtWon=v=>{const n=Number(v);return isNaN(n)||!v?"-":n.toLocaleString("ko-KR")+"원";};
-const fmtNum=v=>(!v&&v!==0)?"-":Number(v).toLocaleString("ko-KR");
-const toN=x=>parseFloat(String(x).replace(/[,\s%]/g,""))||0;
-
-function calcScore(rating,help,hasRel,len){
-  return ({1:3,2:2,3:1}[rating]||0)*2 + (help>=5?3:help>=1?2:0)*2 + (hasRel?5:0) + (len>=50?5:len>=30?3:1);
+function gg(ctx,a1=0.14,a2=0.01){
+  const g=ctx.createLinearGradient(0,0,0,ctx.canvas.height);
+  g.addColorStop(0,`rgba(120,120,120,${a1})`);g.addColorStop(1,`rgba(120,120,120,${a2})`);return g;
 }
-function scoreLevel(s){return s<=5?"낮음":s<=10?"보통":s<=15?"높음":"심각";}
-const levelColor={"낮음":"#888","보통":"#C9A84C","높음":"#E88C00","심각":"#E53E3E"};
-const levelBg={"낮음":"#F5F5F5","보통":"#FFF8E8","높음":"#FFF0D0","심각":"#FFF0F0"};
+const baseOpts={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(17,17,17,0.88)',titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},cornerRadius:8,padding:8,boxPadding:4}},
+  scales:{x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+          y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}}}};
 
-// ── 데이터 fetch ────────────────────────────────────────────────
+function mkChart(id,cfg){
+  if(charts[id])charts[id].destroy();
+  const el=document.getElementById(id);if(!el)return;
+  charts[id]=new Chart(el,cfg);return charts[id];
+}
+
 async function fetchAll(){
-  showLoading();
+  document.getElementById('last-updated').textContent='불러오는 중...';
   try{
     const [r1,r2]=await Promise.all([fetch(`${API}?gid=${GID1}`),fetch(`${API}?gid=${GID2}`)]);
     const [j1,j2]=await Promise.all([r1.json(),r2.json()]);
-    tab1Raw=j1.data||[]; tab2Raw=j2.data||[];
-    document.getElementById("last-updated").textContent="Last updated: "+new Date().toLocaleDateString("ko-KR");
-    const yrs=[...new Set(tab1Raw.map(r=>{const d=Object.values(r)[0]||"";return parseInt(String(d).split("/")[0]);}).filter(y=>!isNaN(y)))].sort();
+    tab1Raw=j1.data||[];tab2Raw=j2.data||[];
+    document.getElementById('last-updated').textContent='Last updated: '+new Date().toLocaleDateString('ko-KR');
+    const yrs=[...new Set(tab1Raw.map(r=>{const d=Object.values(r)[0]||'';return parseInt(String(d).split('/')[0]);}).filter(y=>!isNaN(y)))].sort();
     if(yrs.length)selYear=Math.max(...yrs);
     render();
-  }catch(e){showError();}
+  }catch(e){
+    document.getElementById('last-updated').textContent='데이터 로드 실패 — 새로고침 버튼을 눌러주세요';
+  }
 }
 
-function showLoading(){
-  document.getElementById("tab1-content").innerHTML='<div class="loading"><div class="icon">⏳</div>데이터 불러오는 중...</div>';
-  document.getElementById("tab2-content").innerHTML='<div class="loading"><div class="icon">⏳</div>데이터 불러오는 중...</div>';
-}
-function showError(){
-  document.getElementById("tab1-content").innerHTML='<div class="error">⚠️ 데이터를 불러오지 못했어요.<br><button class="retry-btn" onclick="fetchAll()">다시 시도</button></div>';
-}
-
-// ── 탭 전환 ─────────────────────────────────────────────────────
-function switchTab(t){
-  currentTab=t;
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(`tab${t}-page`).classList.add("active");
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-  document.getElementById(`nav${t}`).classList.add("active");
-  document.getElementById("page-title").textContent=t===1?"SIDIZ 네이버 실적 대시보드":"네이버 부정후기 추이";
-  buildFilterBar();
-}
-
-// ── 파싱 ────────────────────────────────────────────────────────
 function parseTab1(){
   return tab1Raw.map(row=>{
     const v=Object.values(row);
-    const parts=String(v[0]||"").split("/");
+    const parts=String(v[0]||'').split('/');
     return{year:parseInt(parts[0]),month:parseInt(parts[1]),
       ERP:toN(v[10]),target:toN(v[8]),achieve:toN(v[11]),
       buyers:toN(v[4]),refundAmt:toN(v[7]),payment:toN(v[6]),
@@ -224,58 +339,68 @@ function parseTab1(){
 function parseTab2(){
   return tab2Raw.map(row=>{
     const v=Object.values(row);
-    const parts=String(v[0]||"").split("-");
+    const parts=String(v[0]||'').split('-');
     const rating=parseInt(v[7])||0;
-    const content=String(v[8]||"");
+    const content=String(v[8]||'');
     const help=parseInt(v[9])||0;
-    const related=String(v[10]||"").trim();
+    const related=String(v[10]||'').trim();
     const score=calcScore(rating,help,!!related,content.length);
     return{year:parseInt(parts[0]),month:parseInt(parts[1]),
-      date:String(v[0]||""),prodName:String(v[5]||""),writer:String(v[6]||""),
+      date:String(v[0]||''),prodName:String(v[5]||''),writer:String(v[6]||''),
       rating,content,help,related,score,level:scoreLevel(score)};
   }).filter(r=>!isNaN(r.year)&&r.year>2000&&r.rating>0&&r.rating<=3);
 }
 
-// ── 필터바 ───────────────────────────────────────────────────────
-function buildFilterBar(){
-  const p1=parseTab1(); const p2=parseTab2();
-  const years=[...new Set([...p1.map(r=>r.year),...p2.map(r=>r.year)])].sort();
-  const cur=currentTab===1?p1.filter(r=>r.year===selYear&&r.ERP>0):p2.filter(r=>r.year===selYear);
-  const activeM=selMonth||getLatestMonth(p1);
-
-  let html='';
-  years.forEach(y=>{
-    html+=`<button class="fbtn${selYear===y?' active':''}" onclick="setYear(${y})">${y}년</button>`;
-  });
-  html+='<div class="divider"></div>';
-  for(let m=1;m<=12;m++){
-    const has=cur.some(r=>r.month===m);
-    const active=activeM===m;
-    html+=`<button class="fbtn${active?' active':''}" ${has?'':'disabled'} onclick="setMonth(${m})">${m}월</button>`;
-  }
-  document.getElementById("filter-bar").innerHTML=html;
+function calcScore(rating,help,hasRel,len){
+  return ({1:3,2:2,3:1}[rating]||0)*2+help+(hasRel?5:0)+(len>=50?5:len>=30?3:1);
+}
+function scoreLevel(s){
+  return s<=5?{lv:'낮음',color:'#999',bg:'#F5F5F5'}:
+         s<=10?{lv:'보통',color:'#A07000',bg:'#FFF8E0'}:
+         s<=15?{lv:'높음',color:'#C47000',bg:'#FFF0D0'}:
+               {lv:'심각',color:'#D93030',bg:'#FFF0F0'};
 }
 
 function getLatestMonth(data){
-  const cur=data.filter(r=>r.year===selYear&&r.ERP>0);
+  const cur=data.filter(r=>r.year===selYear&&(r.ERP||r.rating));
   const months=cur.map(r=>r.month).filter(m=>!isNaN(m));
   return months.length?Math.max(...months):null;
 }
 
-function setYear(y){selYear=y;selMonth=null;render();}
-function setMonth(m){selMonth=selMonth===m?null:m;render();}
-
-// ── 차트 파괴 ───────────────────────────────────────────────────
-function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
-
-// ── 렌더 ────────────────────────────────────────────────────────
 function render(){
-  buildFilterBar();
-  if(currentTab===1)renderTab1();
+  buildFilters();
+  if(document.getElementById('p1').classList.contains('on'))renderTab1();
   else renderTab2();
 }
 
-// ════════════════ TAB1 렌더 ════════════════
+function buildFilters(){
+  const p1=parseTab1(),p2=parseTab2();
+  const years=[...new Set([...p1.map(r=>r.year),...p2.map(r=>r.year)])].filter(y=>y>2000).sort();
+  const activeM=selMonth||getLatestMonth(document.getElementById('p1').classList.contains('on')?p1:p2);
+
+  [1,2].forEach(t=>{
+    const yrEl=document.getElementById(`yr-btns${t}`);
+    yrEl.innerHTML='';yrEl.style.cssText='display:flex;gap:4px';
+    years.forEach(y=>{
+      const b=document.createElement('button');b.className='fp'+(selYear===y?' on':'');
+      b.textContent=y+'년';b.onclick=()=>{selYear=y;selMonth=null;render();};
+      yrEl.appendChild(b);
+    });
+    const moEl=document.getElementById(`mo-btns${t}`);
+    moEl.innerHTML='';
+    const cur=t===1?p1.filter(r=>r.year===selYear&&r.ERP>0):p2.filter(r=>r.year===selYear);
+    for(let m=1;m<=12;m++){
+      const has=cur.some(r=>r.month===m);
+      const active=activeM===m;
+      const b=document.createElement('button');
+      b.className='fp'+(active?' yon':has?'':' ');
+      b.textContent=m+'월';b.disabled=!has;
+      b.onclick=()=>{selMonth=selMonth===m?null:m;render();};
+      moEl.appendChild(b);
+    }
+  });
+}
+
 function renderTab1(){
   const p1=parseTab1();
   const cur=p1.filter(r=>r.year===selYear);
@@ -299,422 +424,288 @@ function renderTab1(){
   const prevRefRate=prev.length?prev.reduce((s,r)=>s+r.refundRate,0)/prev.length:0;
   const refYoY=avgRefRate-prevRefRate;
 
-  const donutPct=Math.min(ytdAch,100);
-  const r=60,stroke=14,circ=2*Math.PI*r;
-  const dash=circ*(1-donutPct/100);
+  const kpiCard=(lbl,val,sub,subCls,hl=false)=>`
+    <div class="kc${hl?' hl':''}">
+      <div class="k-lbl">${lbl}</div>
+      <div class="k-val">${val}</div>
+      <div class="k-sub ${subCls}">${sub}</div>
+    </div>`;
 
-  const kpi1=[
-    {label:"YTD 누적 ERP 매출",val:fmt억(ytdERP),icon:"🎯",
-     sub:`${ytdYoY>=0?"▲":"▼"} ${Math.abs(ytdYoY).toFixed(1)}% YoY (${selYear} vs ${selYear-1})`,sc:ytdYoY>=0?"green":"red"},
-    {label:"YTD 누적 목표 달성율",val:fmtPct(ytdAch),icon:"✓",
-     sub:`Target: ${fmt억(ytdTarget)}`,sc:"gold"},
-    {label:"올해 평균 객단가",val:fmtWon(Math.round(avgAOV)),icon:"👤",
-     sub:`${aovYoY>=0?"▲":"▼"} ${Math.abs(aovYoY).toFixed(1)}% 증감 (YoY)`,sc:aovYoY>=0?"green":"red"},
-    {label:"올해 평균 환불율",val:fmtPct(avgRefRate),icon:"↩",
-     sub:`${refYoY>=0?"▲":"▼"} ${Math.abs(refYoY).toFixed(1)}%p 증감 (YoY)`,sc:refYoY<=0?"green":"red"},
-  ];
-
-  const calcSub=(c,p,type)=>{
-    if(!c||!p)return"";
-    if(type==="pct"){const d=(c-p).toFixed(1);return`${d>=0?"+":""}${d}%p 전월 대비`;}
-    if(p===0)return"";
-    const d=((c-p)/p*100).toFixed(1);return`${d>=0?"+":""}${d}% 전월 대비`;
+  const pctSub=(c,p,type)=>{
+    if(!c||!p)return'';
+    if(type==='pct'){const d=(c-p).toFixed(1);return`${d>=0?'↗':'↘'} ${Math.abs(d)}%p 전월 대비`;}
+    if(p===0)return'';
+    const d=((c-p)/p*100).toFixed(1);return`${d>=0?'↗':'↘'} ${Math.abs(d)}% 전월 대비`;
   };
 
-  const kpi2=[
-    {label:`${activeM}월 매출`,val:fmt억(curMD?.ERP),icon:"📈",
-     sub:calcSub(curMD?.ERP,prevMD?.ERP,"val"),sc:curMD&&prevMD?(curMD.ERP>=prevMD.ERP?"green":"red"):""},
-    {label:`${activeM}월 목표 달성율`,val:fmtPct(curMD?.achieve),icon:"🏆",
-     sub:calcSub(curMD?.achieve,prevMD?.achieve,"pct"),sc:curMD&&prevMD?(curMD.achieve>=prevMD.achieve?"green":"red"):""},
-    {label:`${activeM}월 객단가`,val:fmtWon(curMD?.aov),icon:"💰",
-     sub:calcSub(curMD?.aov,prevMD?.aov,"val"),sc:curMD&&prevMD?(curMD.aov>=prevMD.aov?"green":"red"):""},
-    {label:`${activeM}월 환불율`,val:fmtPct(curMD?.refundRate),icon:"↩",
-     sub:calcSub(curMD?.refundRate,prevMD?.refundRate,"pct"),sc:curMD&&prevMD?(curMD.refundRate<=prevMD.refundRate?"green":"red"):""},
-  ];
+  document.getElementById('kpi1-top').innerHTML=
+    kpiCard('YTD 누적 ERP 매출',fmt억(ytdERP),`${ytdYoY>=0?'↗':'↘'} ${Math.abs(ytdYoY).toFixed(1)}% YoY`,ytdYoY>=0?'gn':'rd')+
+    kpiCard('YTD 누적 목표 달성율',fmtPct(ytdAch),`● Target: ${fmt억(ytdTarget)}`,'go')+
+    kpiCard('올해 평균 객단가',fmtWon(Math.round(avgAOV)),`${aovYoY>=0?'↗':'↘'} ${Math.abs(aovYoY).toFixed(1)}% 증감 (YoY)`,aovYoY>=0?'gn':'rd')+
+    kpiCard('올해 평균 환불율',`<span class="${refYoY<=0?'gn':'rd'}">${fmtPct(avgRefRate)}<span class="u"></span></span>`,`${refYoY>=0?'↗':'↘'} ${Math.abs(refYoY).toFixed(1)}%p 증감 (YoY)`,refYoY<=0?'gn':'rd');
 
-  const kpiHtml=arr=>arr.map(k=>`
-    <div class="kpi-card">
-      <div class="kpi-header"><span class="kpi-label">${k.label}</span><span class="kpi-icon">${k.icon}</span></div>
-      <div class="kpi-value">${k.val}</div>
-      <div class="kpi-sub ${k.sc||''}">${k.sub||""}</div>
-    </div>`).join("");
+  document.getElementById('kpi1-bot').innerHTML=
+    kpiCard(`${activeM}월 매출`,fmt억(curMD?.ERP),pctSub(curMD?.ERP,prevMD?.ERP,'val'),curMD&&prevMD?(curMD.ERP>=prevMD.ERP?'gn':'rd'):'gy',true)+
+    kpiCard(`${activeM}월 목표 달성율`,fmtPct(curMD?.achieve),pctSub(curMD?.achieve,prevMD?.achieve,'pct'),curMD&&prevMD?(curMD.achieve>=prevMD.achieve?'gn':'rd'):'gy',true)+
+    kpiCard(`${activeM}월 객단가`,fmtWon(curMD?.aov),pctSub(curMD?.aov,prevMD?.aov,'val'),curMD&&prevMD?(curMD.aov>=prevMD.aov?'gn':'rd'):'gy',true)+
+    kpiCard(`${activeM}월 환불율`,fmtPct(curMD?.refundRate),pctSub(curMD?.refundRate,prevMD?.refundRate,'pct'),curMD&&prevMD?(curMD.refundRate<=prevMD.refundRate?'gn':'rd'):'gy',true);
 
-  // 월별 데이터
-  const months=Array.from({length:12},(_,i)=>i+1);
-  const mLabels=months.map(m=>`${m}`);
-  const erp=months.map(m=>cur.find(r=>r.month===m)?.ERP||null);
-  const tgt=months.map(m=>cur.find(r=>r.month===m)?.target||null);
-  const prevErp=months.map(m=>prev.find(r=>r.month===m)?.ERP||null);
-  const ach=months.map(m=>cur.find(r=>r.month===m)?.achieve||null);
-  const buyers=months.map(m=>cur.find(r=>r.month===m)?.buyers||null);
-  const prevBuyers=months.map(m=>prev.find(r=>r.month===m)?.buyers||null);
-  const reviews=months.map(m=>cur.find(r=>r.month===m)?.reviews||null);
-  const prevReviews=months.map(m=>prev.find(r=>r.month===m)?.reviews||null);
-  const reviewYoy=months.map(m=>cur.find(r=>r.month===m)?.reviewYoy||null);
-  const refundAmt=cur.map(r=>r.refundAmt);
-  const refundCnt=cur.map(r=>r.refundCnt);
-  const refundMonths=cur.map(r=>`${r.month}`);
+  // 도넛 업데이트
+  const donutPct=Math.min(ytdAch,100);
+  const circ=345.4;
+  document.getElementById('donut-arc').setAttribute('stroke-dashoffset',(circ*(1-donutPct/100)).toFixed(1));
+  document.getElementById('donut-pct').textContent=donutPct.toFixed(1)+'%';
+  document.getElementById('donut-ytd').textContent=fmt억(ytdERP);
+  document.getElementById('donut-target').textContent=fmt억(ytdTarget);
+  document.getElementById('donut-sub').textContent=selYear+'년';
 
-  ['chart-monthly','chart-buyers','chart-refund','chart-review'].forEach(destroyChart);
+  const ml=['1','2','3','4','5','6','7','8','9','10','11','12'];
+  const erp=ml.map((_,i)=>cur.find(r=>r.month===i+1)?.ERP||null);
+  const tgt=ml.map((_,i)=>cur.find(r=>r.month===i+1)?.target||null);
+  const prevErp=ml.map((_,i)=>prev.find(r=>r.month===i+1)?.ERP||null);
+  const ach=ml.map((_,i)=>cur.find(r=>r.month===i+1)?.achieve||null);
+  const buyers=ml.map((_,i)=>cur.find(r=>r.month===i+1)?.buyers||null);
+  const prevBuyers=ml.map((_,i)=>prev.find(r=>r.month===i+1)?.buyers||null);
+  const reviews=ml.map((_,i)=>cur.find(r=>r.month===i+1)?.reviews||null);
+  const prevReviews=ml.map((_,i)=>prev.find(r=>r.month===i+1)?.reviews||null);
+  const reviewYoy=ml.map((_,i)=>cur.find(r=>r.month===i+1)?.reviewYoy||null);
+  const refund=cur.map(r=>({m:`${r.month}`,amt:r.refundAmt,cnt:r.refundCnt}));
 
-  document.getElementById("tab1-content").innerHTML=`
-    <div class="kpi-grid">${kpiHtml(kpi1)}</div>
-    <div class="kpi-grid">${kpiHtml(kpi2)}</div>
+  mkChart('c1',{type:'bar',data:{labels:ml,datasets:[
+    {label:'목표',data:tgt,type:'line',borderColor:'transparent',pointRadius:0,fill:true,backgroundColor:ctx=>gg(ctx.chart.ctx,0.12,0.02),tension:0.4,order:3,yAxisID:'y'},
+    {label:'실적',data:erp,backgroundColor:'#111',borderRadius:5,order:2,yAxisID:'y',barPercentage:0.5},
+    {label:'전년',data:prevErp,type:'line',borderColor:'#C8C8C8',borderWidth:1.2,borderDash:[4,3],pointRadius:0,fill:false,order:1,yAxisID:'y',tension:0.4},
+    {label:'달성율',data:ach,type:'line',borderColor:Y,borderWidth:2,pointBackgroundColor:ml.map((_,i)=>i===activeM-1?Y:'#555'),pointRadius:ml.map((_,i)=>i===activeM-1?5:3),fill:false,order:0,yAxisID:'y2',tension:0.4},
+  ]},options:{...baseOpts,layout:{padding:{top:22}},scales:{
+    x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA',callback:v=>v?v+'억':''},border:{display:false}},
+    y2:{position:'right',grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:YD,callback:v=>v?v+'%':''},border:{display:false}},
+  },animation:{onComplete:function(){
+    const c=this,ctx=c.ctx;ctx.save();ctx.font='600 9px Inter,sans-serif';ctx.textAlign='center';
+    const m=c.getDatasetMeta(3);m.data.forEach((pt,i)=>{const v=c.data.datasets[3].data[i];if(v!=null){ctx.fillStyle=i===activeM-1?YD:'#999';ctx.fillText(v+'%',pt.x,pt.y-7);}});
+    ctx.restore();
+  }}}});
 
-    <div class="chart-grid-donut">
-      <div class="chart-card">
-        <div class="chart-title">연 목표 달성율</div>
-        <div class="chart-sub">${selYear}년</div>
-        <div class="donut-wrap">
-          <svg width="160" height="160" viewBox="0 0 160 160" style="display:block;margin:0 auto">
-            <circle cx="80" cy="80" r="${r}" fill="none" stroke="#E8E4DC" stroke-width="${stroke}"/>
-            <circle cx="80" cy="80" r="${r}" fill="none" stroke="#C9A84C"
-              stroke-width="${stroke}" stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${dash.toFixed(2)}"
-              stroke-linecap="round" transform="rotate(-90 80 80)"/>
-            <text x="80" y="74" text-anchor="middle" font-size="20" font-weight="800" fill="#C9A84C">${donutPct.toFixed(1)}%</text>
-            <text x="80" y="94" text-anchor="middle" font-size="10" fill="#888">Achieved</text>
-          </svg>
-        </div>
-        <div class="donut-info">
-          <div class="donut-row"><span>YTD 실적</span><span>${fmt억(ytdERP)}</span></div>
-          <div class="donut-row"><span>연간 총 목표</span><span>${fmt억(ytdTarget)}</span></div>
-        </div>
-      </div>
+  document.getElementById('buyer-sub').textContent=`${selYear} vs ${selYear-1}년`;
+  document.getElementById('buyer-lbl1').textContent=selYear+'년';
+  document.getElementById('buyer-lbl2').textContent=(selYear-1)+'년';
 
-      <div class="chart-card">
-        <div class="chart-title">월별 실적 vs 목표 달성</div>
-        <div class="chart-sub">${selYear}년 ERP 매출 및 달성율</div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-rect" style="background:#1A1A1A"></div>실적</div>
-          <div class="legend-item"><div class="legend-rect" style="background:#E8E4DC"></div>목표</div>
-          <div class="legend-item"><div class="legend-dash"></div>전년실적</div>
-          <div class="legend-item"><div class="legend-line" style="background:#C9A84C"></div>달성율</div>
-        </div>
-        <canvas id="chart-monthly" height="220"></canvas>
-      </div>
-    </div>
+  mkChart('c2',{type:'line',data:{labels:ml,datasets:[
+    {data:prevBuyers,borderColor:'rgba(140,140,140,0.4)',borderWidth:1.2,borderDash:[4,3],pointRadius:0,fill:true,backgroundColor:ctx=>gg(ctx.chart.ctx),tension:0.4},
+    {data:buyers,borderColor:'#111',borderWidth:1.8,pointBackgroundColor:ml.map((_,i)=>i===activeM-1?Y:'#111'),pointRadius:ml.map((_,i)=>i===activeM-1?5:3),fill:false,tension:0.4},
+  ]},options:{...baseOpts,layout:{padding:{top:18}},scales:{
+    x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA',callback:v=>v?(v/1000).toFixed(0)+'k':''},border:{display:false}},
+  },animation:{onComplete:function(){
+    const c=this,ctx=c.ctx;ctx.save();ctx.font='600 9px Inter,sans-serif';ctx.textAlign='center';
+    const m=c.getDatasetMeta(1);m.data.forEach((pt,i)=>{const v=c.data.datasets[1].data[i];if(v!=null){ctx.fillStyle=i===activeM-1?YD:'#666';ctx.fillText((v/1000).toFixed(1)+'k',pt.x,pt.y-7);}});
+    ctx.restore();
+  }}}});
 
-    <div class="chart-grid-2">
-      <div class="chart-card">
-        <div class="chart-title">구매자수 추이</div>
-        <div class="chart-sub">${selYear}년 vs ${selYear-1}년</div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-rect" style="background:#1A1A1A"></div>${selYear}년</div>
-          <div class="legend-item"><div class="legend-rect" style="background:#E8E4DC"></div>${selYear-1}년</div>
-        </div>
-        <canvas id="chart-buyers" height="190"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">환불 추이</div>
-        <div class="chart-sub">금액(막대) 및 건수(선)</div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-rect" style="background:#F9BFBF"></div>금액</div>
-          <div class="legend-item"><div class="legend-line" style="background:#E53E3E"></div>건수</div>
-        </div>
-        <canvas id="chart-refund" height="190"></canvas>
-      </div>
-    </div>
+  mkChart('c3',{type:'bar',data:{labels:refund.map(r=>r.m),datasets:[
+    {label:'금액',data:refund.map(r=>r.amt),backgroundColor:refund.map(r=>r.m==String(activeM)?Y:'#D8D5CE'),borderRadius:5,order:2,yAxisID:'y'},
+    {label:'건수',data:refund.map(r=>r.cnt),type:'line',borderColor:'#111',borderWidth:1.8,pointBackgroundColor:refund.map(r=>r.m==String(activeM)?Y:'#111'),pointRadius:3,fill:false,order:1,yAxisID:'y2',tension:0.4},
+  ]},options:{...baseOpts,layout:{padding:{top:18}},scales:{
+    x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA',callback:v=>v?v+'억':''},border:{display:false}},
+    y2:{position:'right',grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+  },animation:{onComplete:function(){
+    const c=this,ctx=c.ctx;ctx.save();ctx.font='600 9px Inter,sans-serif';ctx.textAlign='center';
+    [0,1].forEach(di=>{const m=c.getDatasetMeta(di);m.data.forEach((pt,i)=>{const v=c.data.datasets[di].data[i];if(v!=null){ctx.fillStyle=refund[i]?.m==String(activeM)?YD:'#999';ctx.fillText(di===0?v+'억':v.toLocaleString()+'건',pt.x,pt.y-7);}});});
+    ctx.restore();
+  }}}});
 
-    <div class="chart-card full">
-      <div class="chart-title">리뷰수 추이 및 전년비</div>
-      <div class="chart-sub">${selYear}년 vs ${selYear-1}년 (YoY)</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-rect" style="background:#1A1A1A"></div>${selYear}년</div>
-        <div class="legend-item"><div class="legend-rect" style="background:#E8E4DC"></div>${selYear-1}년</div>
-        <div class="legend-item"><div class="legend-line" style="background:#C9A84C"></div>YoY %</div>
-      </div>
-      <canvas id="chart-review" height="180"></canvas>
-    </div>
-  `;
+  document.getElementById('review-sub').textContent=`${selYear} vs ${selYear-1}년 (YoY)`;
+  document.getElementById('rev-lbl1').textContent=selYear+'년';
+  document.getElementById('rev-lbl2').textContent=(selYear-1)+'년';
 
-  // 차트 생성
-  requestAnimationFrame(()=>{
-    const co={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
-      if(ctx.dataset.label==="달성율")return` ${ctx.raw?.toFixed(1)||0}%`;
-      if(ctx.dataset.label==="건수")return` ${fmtNum(ctx.raw)}건`;
-      return` ${fmt억(ctx.raw)}`;
-    }}}},scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#888"}},y:{grid:{color:"#F0EDE7"},ticks:{font:{size:10},color:"#888"}}}};
-
-    // 월별 복합
-    charts["chart-monthly"]=new Chart(document.getElementById("chart-monthly"),{
-      type:"bar",
-      data:{labels:mLabels,datasets:[
-        {label:"실적",data:erp,backgroundColor:"#1A1A1A",borderRadius:3,order:2,yAxisID:"y"},
-        {label:"목표",data:tgt,type:"line",borderColor:"#E8E4DC",borderWidth:2,pointBackgroundColor:"#E8E4DC",pointRadius:3,fill:false,order:1,yAxisID:"y"},
-        {label:"전년실적",data:prevErp,type:"line",borderColor:"#CCC",borderWidth:1.5,borderDash:[5,3],pointBackgroundColor:"#CCC",pointRadius:2,fill:false,order:1,yAxisID:"y"},
-        {label:"달성율",data:ach,type:"line",borderColor:"#C9A84C",borderWidth:2,pointBackgroundColor:"#C9A84C",pointRadius:3,fill:false,order:0,yAxisID:"y2"},
-      ]},
-      options:{...co,scales:{
-        x:{grid:{display:false},ticks:{font:{size:11},color:"#888"}},
-        y:{grid:{color:"#F0EDE7"},ticks:{font:{size:10},color:"#888",callback:v=>v?(v/1e8).toFixed(0)+"억":""}},
-        y2:{position:"right",grid:{display:false},ticks:{font:{size:10},color:"#C9A84C",callback:v=>v+"%"}},
-      }}
-    });
-
-    // 구매자
-    charts["chart-buyers"]=new Chart(document.getElementById("chart-buyers"),{
-      type:"line",
-      data:{labels:mLabels,datasets:[
-        {label:`${selYear-1}년`,data:prevBuyers,borderColor:"#E8E4DC",backgroundColor:"rgba(232,228,220,0.3)",borderWidth:1.5,fill:true,pointRadius:0,tension:0.4},
-        {label:`${selYear}년`,data:buyers,borderColor:"#1A1A1A",backgroundColor:"rgba(26,26,26,0.08)",borderWidth:2,fill:true,pointBackgroundColor:"#1A1A1A",pointRadius:3,tension:0.4},
-      ]},
-      options:{...co,scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#888"}},y:{grid:{color:"#F0EDE7"},ticks:{font:{size:10},color:"#888",callback:v=>v?(v/1000).toFixed(0)+"k":""}}}},
-    });
-
-    // 환불
-    charts["chart-refund"]=new Chart(document.getElementById("chart-refund"),{
-      type:"bar",
-      data:{labels:refundMonths,datasets:[
-        {label:"금액",data:refundAmt,backgroundColor:"#F9BFBF",borderRadius:3,order:2,yAxisID:"y"},
-        {label:"건수",data:refundCnt,type:"line",borderColor:"#E53E3E",borderWidth:2,pointBackgroundColor:"#E53E3E",pointRadius:3,fill:false,order:1,yAxisID:"y2"},
-      ]},
-      options:{...co,scales:{
-        x:{grid:{display:false},ticks:{font:{size:11},color:"#888"}},
-        y:{grid:{color:"#F0EDE7"},ticks:{font:{size:10},color:"#888",callback:v=>v?(v/1e8).toFixed(1)+"억":""}},
-        y2:{position:"right",grid:{display:false},ticks:{font:{size:10},color:"#E53E3E"}},
-      }}
-    });
-
-    // 리뷰
-    charts["chart-review"]=new Chart(document.getElementById("chart-review"),{
-      type:"line",
-      data:{labels:mLabels,datasets:[
-        {label:`${selYear-1}년`,data:prevReviews,borderColor:"#E8E4DC",backgroundColor:"rgba(232,228,220,0.3)",borderWidth:1.5,fill:true,pointRadius:0,tension:0.4,yAxisID:"y"},
-        {label:`${selYear}년`,data:reviews,borderColor:"#1A1A1A",backgroundColor:"rgba(26,26,26,0.08)",borderWidth:2,fill:true,pointBackgroundColor:"#1A1A1A",pointRadius:3,tension:0.4,yAxisID:"y"},
-        {label:"YoY%",data:reviewYoy,borderColor:"#C9A84C",borderWidth:2,pointBackgroundColor:reviewYoy.map(v=>v>=0?"#2F855A":"#E53E3E"),pointRadius:4,fill:false,tension:0.4,yAxisID:"y2"},
-      ]},
-      options:{...co,scales:{
-        x:{grid:{display:false},ticks:{font:{size:11},color:"#888"}},
-        y:{grid:{color:"#F0EDE7"},ticks:{font:{size:10},color:"#888"}},
-        y2:{position:"right",grid:{display:false},ticks:{font:{size:10},color:"#C9A84C",callback:v=>v+"%"}},
-      }}
-    });
-  });
+  mkChart('c4',{type:'line',data:{labels:ml,datasets:[
+    {data:prevReviews,borderColor:'rgba(140,140,140,0.4)',borderWidth:1.2,borderDash:[4,3],pointRadius:0,fill:true,backgroundColor:ctx=>gg(ctx.chart.ctx),tension:0.4,yAxisID:'y'},
+    {data:reviews,borderColor:'#111',borderWidth:1.8,pointBackgroundColor:ml.map((_,i)=>i===activeM-1?Y:'#111'),pointRadius:ml.map((_,i)=>i===activeM-1?5:3),fill:false,tension:0.4,yAxisID:'y'},
+    {data:reviewYoy,borderColor:Y,borderWidth:1.8,pointBackgroundColor:Y,pointRadius:3,fill:false,tension:0.4,yAxisID:'y2'},
+  ]},options:{...baseOpts,layout:{padding:{top:18}},scales:{
+    x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+    y2:{position:'right',grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:YD,callback:v=>v?v+'%':''},border:{display:false}},
+  },animation:{onComplete:function(){
+    const c=this,ctx=c.ctx;ctx.save();ctx.font='600 9px Inter,sans-serif';ctx.textAlign='center';
+    const m=c.getDatasetMeta(1);m.data.forEach((pt,i)=>{const v=c.data.datasets[1].data[i];if(v!=null){ctx.fillStyle=i===activeM-1?YD:'#555';ctx.fillText(v.toLocaleString(),pt.x,pt.y-7);}});
+    ctx.restore();
+  }}}});
 }
-
-// ════════════════ TAB2 렌더 ════════════════
-let activeRTab=1, prodFilter=[];
 
 function renderTab2(){
   const p2=parseTab2();
-  const cur=p2.filter(r=>r.year===selYear);
-  const prev=p2.filter(r=>r.year===selYear-1);
   const p1=parseTab1();
   const activeM=selMonth||getLatestMonth(p1);
+  const cur=p2.filter(r=>r.year===selYear);
+  const prev=p2.filter(r=>r.year===selYear-1);
   const cur2M=cur.filter(r=>r.month===activeM);
   const prevM=cur.filter(r=>r.month===(activeM||1)-1);
 
-  const ytdNeg=cur.length, ytd1=cur.filter(r=>r.rating===1).length, ytd2=cur.filter(r=>r.rating===2).length;
-  const prevNeg=prev.length, yoyNeg=prevNeg>0?((ytdNeg-prevNeg)/prevNeg)*100:0;
-  const mnNeg=cur2M.length, mn1=cur2M.filter(r=>r.rating===1).length, mn2=cur2M.filter(r=>r.rating===2).length;
-  const prevMnNeg=prevM.length, momNeg=prevMnNeg>0?((mnNeg-prevMnNeg)/prevMnNeg)*100:0;
+  const ytdNeg=cur.length,ytd1=cur.filter(r=>r.rating===1).length,ytd2=cur.filter(r=>r.rating===2).length;
+  const prevNeg=prev.length,yoyNeg=prevNeg>0?((ytdNeg-prevNeg)/prevNeg)*100:0;
+  const mnNeg=cur2M.length,mn1=cur2M.filter(r=>r.rating===1).length,mn2=cur2M.filter(r=>r.rating===2).length;
+  const prevMnNeg=prevM.length,momNeg=prevMnNeg>0?((mnNeg-prevMnNeg)/prevMnNeg)*100:0;
 
-  const kpi1=[
-    {label:`${selYear}년 총 부정후기`,val:fmtNum(ytdNeg)+"건",icon:"💬",
-     sub:`${yoyNeg>=0?"▲":"▼"} ${Math.abs(yoyNeg).toFixed(1)}% YoY`,sc:yoyNeg<=0?"green":"red"},
-    {label:`${selYear}년 1점 누적`,val:fmtNum(ytd1)+"건",icon:"⭐",
-     sub:`전체의 ${ytdNeg?(ytd1/ytdNeg*100).toFixed(1):0}%`,sc:"red"},
-    {label:`${selYear}년 2점 누적`,val:fmtNum(ytd2)+"건",icon:"⭐",
-     sub:`전체의 ${ytdNeg?(ytd2/ytdNeg*100).toFixed(1):0}%`,sc:"gold"},
-    {label:"전년비 증감",val:`${yoyNeg>=0?"+":""}${yoyNeg.toFixed(1)}%`,icon:"📉",
-     sub:`${selYear-1}년 ${fmtNum(prevNeg)}건 → ${selYear}년 ${fmtNum(ytdNeg)}건`,sc:yoyNeg<=0?"green":"red"},
-  ];
-  const kpi2=[
-    {label:`${activeM}월 총 부정후기`,val:fmtNum(mnNeg)+"건",icon:"📋",
-     sub:`${momNeg>=0?"▲":"▼"} ${Math.abs(momNeg).toFixed(1)}% 전월 대비`,sc:momNeg<=0?"green":"red"},
-    {label:`${activeM}월 1점`,val:fmtNum(mn1)+"건",icon:"🔴",
-     sub:`월내 ${mnNeg?(mn1/mnNeg*100).toFixed(1):0}%`,sc:"red"},
-    {label:`${activeM}월 2점`,val:fmtNum(mn2)+"건",icon:"🟡",
-     sub:`월내 ${mnNeg?(mn2/mnNeg*100).toFixed(1):0}%`,sc:"gold"},
-    {label:"전월비 증감",val:`${momNeg>=0?"+":""}${momNeg.toFixed(1)}%`,icon:"📊",
-     sub:`전월 ${fmtNum(prevMnNeg)}건 → 이번달 ${fmtNum(mnNeg)}건`,sc:momNeg<=0?"green":"red"},
-  ];
-  const kpiHtml=arr=>arr.map(k=>`
-    <div class="kpi-card">
-      <div class="kpi-header"><span class="kpi-label">${k.label}</span><span class="kpi-icon">${k.icon}</span></div>
-      <div class="kpi-value">${k.val}</div>
-      <div class="kpi-sub ${k.sc||''}">${k.sub||""}</div>
-    </div>`).join("");
+  const kc=(lbl,val,sub,sc,hl=false)=>`<div class="kc${hl?' hl':''}"><div class="k-lbl">${lbl}</div><div class="k-val">${val}</div><div class="k-sub ${sc}">${sub}</div></div>`;
 
-  const months=Array.from({length:12},(_,i)=>i+1);
-  const negCur=months.map(m=>cur.filter(r=>r.month===m).length||null);
-  const negPrev=months.map(m=>prev.filter(r=>r.month===m).length||null);
-  const r1=months.map(m=>cur.filter(r=>r.month===m&&r.rating===1).length||null);
-  const r2=months.map(m=>cur.filter(r=>r.month===m&&r.rating===2).length||null);
-  const r3=months.map(m=>cur.filter(r=>r.month===m&&r.rating===3).length||null);
+  document.getElementById('kpi2-top').innerHTML=
+    kc(`${selYear}년 총 부정후기`,fmtNum(ytdNeg)+'<span class="u">건</span>',`${yoyNeg>=0?'↗':'↘'} ${Math.abs(yoyNeg).toFixed(1)}% YoY`,yoyNeg<=0?'gn':'rd')+
+    kc(`${selYear}년 1점 누적`,fmtNum(ytd1)+'<span class="u">건</span>',`전체의 ${ytdNeg?(ytd1/ytdNeg*100).toFixed(1):0}%`,'rd')+
+    kc(`${selYear}년 2점 누적`,fmtNum(ytd2)+'<span class="u">건</span>',`전체의 ${ytdNeg?(ytd2/ytdNeg*100).toFixed(1):0}%`,'go')+
+    kc('전년비 증감',`<span class="${yoyNeg<=0?'gn':'rd'}">${yoyNeg>=0?'+':''}${yoyNeg.toFixed(1)}<span class="u">%</span></span>`,`${selYear-1}년 ${fmtNum(prevNeg)}건 → ${selYear}년 ${fmtNum(ytdNeg)}건`,yoyNeg<=0?'gn':'rd');
+
+  document.getElementById('kpi2-bot').innerHTML=
+    kc(`${activeM}월 총 부정후기`,fmtNum(mnNeg)+'<span class="u">건</span>',`${momNeg>=0?'↗':'↘'} ${Math.abs(momNeg).toFixed(1)}% 전월`,momNeg<=0?'gn':'rd',true)+
+    kc(`${activeM}월 1점`,fmtNum(mn1)+'<span class="u">건</span>',`월내 ${mnNeg?(mn1/mnNeg*100).toFixed(1):0}%`,'rd',true)+
+    kc(`${activeM}월 2점`,fmtNum(mn2)+'<span class="u">건</span>',`월내 ${mnNeg?(mn2/mnNeg*100).toFixed(1):0}%`,'go',true)+
+    kc('전월비 증감',`<span class="${momNeg<=0?'gn':'rd'}">${momNeg>=0?'+':''}${momNeg.toFixed(1)}<span class="u">%</span></span>`,`전월 ${fmtNum(prevMnNeg)}건 → 이번달 ${fmtNum(mnNeg)}건`,momNeg<=0?'gn':'rd',true);
+
+  const ml=['1','2','3','4','5','6','7','8','9','10','11','12'];
+  const negCur=ml.map((_,i)=>cur.filter(r=>r.month===i+1).length||null);
+  const negPrev=ml.map((_,i)=>prev.filter(r=>r.month===i+1).length||null);
+  const r1=ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===1).length||null);
+  const r2=ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===2).length||null);
+  const r3=ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===3).length||null);
+
+  document.getElementById('neg-sub').textContent=`${selYear}년(선) vs ${selYear-1}년(배경)`;
+  document.getElementById('neg-lbl1').textContent=selYear+'년';
+  document.getElementById('neg-lbl2').textContent=(selYear-1)+'년';
+  document.getElementById('rating-sub').textContent=`${selYear}년 1·2·3점`;
+
+  mkChart('c5',{type:'line',data:{labels:ml,datasets:[
+    {data:negPrev,borderColor:'transparent',pointRadius:0,fill:true,backgroundColor:ctx=>gg(ctx.chart.ctx),tension:0.4},
+    {data:negCur,borderColor:'#111',borderWidth:1.5,pointBackgroundColor:ml.map((_,i)=>i===activeM-1?Y:'#111'),pointRadius:ml.map((_,i)=>i===activeM-1?5:3),fill:false,tension:0.4},
+  ]},options:{...baseOpts,layout:{padding:{top:18}},animation:{onComplete:function(){
+    const c=this,ctx=c.ctx;ctx.save();ctx.font='600 9px Inter,sans-serif';ctx.textAlign='center';
+    const m=c.getDatasetMeta(1);m.data.forEach((pt,i)=>{const v=c.data.datasets[1].data[i];if(v!=null){ctx.fillStyle='#555';ctx.fillText(v+'건',pt.x,pt.y-7);}});
+    ctx.restore();
+  }}}});
+
+  mkChart('c6',{type:'line',data:{labels:ml,datasets:[
+    {data:r1,borderColor:'#D93030',borderWidth:1.5,pointBackgroundColor:'#D93030',pointRadius:3,fill:false,tension:0.4},
+    {data:r2,borderColor:'#4A90D9',borderWidth:1.5,pointBackgroundColor:'#4A90D9',pointRadius:3,fill:false,tension:0.4},
+    {data:r3,borderColor:'#BBB',borderWidth:1.5,pointBackgroundColor:'#BBB',pointRadius:3,fill:false,tension:0.4},
+  ]},options:{...baseOpts,layout:{padding:{top:18}},animation:{onComplete:function(){
+    const c=this,ctx=c.ctx;ctx.save();ctx.font='600 9px Inter,sans-serif';ctx.textAlign='center';
+    [[0,'#D93030'],[1,'#4A90D9'],[2,'#AAA']].forEach(([di,col])=>{
+      const m=c.getDatasetMeta(di);m.data.forEach((pt,i)=>{const v=c.data.datasets[di].data[i];if(v!=null){ctx.fillStyle=col;ctx.fillText(v+'건',pt.x,pt.y-7);}});
+    });
+    ctx.restore();
+  }}}});
 
   // 카테고리
   const getCategory=name=>{
-    if(!name)return"기타";
-    const m=name.match(/T\d+/);if(m)return m[0]+" 시리즈";
-    if(name.includes("링고"))return"링고";if(name.includes("아이블"))return"아이블";
-    if(name.includes("GX")||name.includes("게이밍"))return"게이밍";
-    if(name.includes("스툴")||name.includes("펑거스"))return"스툴";
-    if(name.includes("발받침")||name.includes("옷걸이")||name.includes("커버"))return"액세서리";
-    if(name.includes("좌식"))return"좌식";
-    if(name.includes("에가")||name.includes("뮤브")||name.includes("탭스퀘어")||name.includes("아띠"))return"회의/유아";
-    return"기타";
+    if(!name)return'기타';
+    const m=name.match(/T\d+/);if(m)return m[0]+' 시리즈';
+    if(name.includes('링고'))return'링고';if(name.includes('아이블'))return'아이블';
+    if(name.includes('GX')||name.includes('게이밍'))return'게이밍';
+    if(name.includes('스툴')||name.includes('펑거스'))return'스툴';
+    if(name.includes('발받침')||name.includes('옷걸이')||name.includes('커버'))return'액세서리';
+    if(name.includes('좌식'))return'좌식';return'기타';
   };
   const catMap={};cur.forEach(r=>{const c=getCategory(r.prodName);catMap[c]=(catMap[c]||0)+1;});
   const catData=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
   const catMax=catData[0]?.[1]||1;
-  const catBars=catData.map(([cat,cnt])=>`
-    <div class="bar-row">
-      <div class="bar-label">${cat}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(cnt/catMax*100).toFixed(1)}%"></div></div>
-      <div class="bar-val">${cnt}</div>
-    </div>`).join("");
+  document.getElementById('cat-sub').textContent=selYear+'년 누적';
+  document.getElementById('cats').innerHTML=catData.map(([l,v],i)=>`
+    <div class="brow"><div class="blbl" style="width:72px">${l}</div>
+    <div class="btrack"><div class="bfill" style="width:${(v/catMax*100).toFixed(0)}%;background:${i===0?Y:'#111'}"></div></div>
+    <div class="bval">${v}</div></div>`).join('');
 
+  // 상품 드롭다운
   const allProds=[...new Set(cur.map(r=>r.prodName).filter(Boolean))].sort();
-  const filtered=prodFilter.length>0?cur.filter(r=>prodFilter.includes(r.prodName)):cur;
-  const prodMap={};filtered.forEach(r=>{const k=r.prodName||"미상";prodMap[k]=(prodMap[k]||0)+1;});
-  const prodData=Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  const prodMax=prodData[0]?.[1]||1;
-  const prodBars=prodData.map(([prod,cnt])=>`
-    <div class="bar-row">
-      <div class="bar-label" style="width:110px;font-size:10px">${prod.replace(/\[.*?\]/g,"").trim().slice(0,20)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(cnt/prodMax*100).toFixed(1)}%"></div></div>
-      <div class="bar-val">${cnt}</div>
-    </div>`).join("");
+  const lc=['#111','#D93030','#4A90D9','#C49A00','#1A8A5A','#888','#9B59B6','#E67E22'];
+  if(!window.selP||window.selP.length===0)window.selP=[...allProds];
+  buildDd(allProds,lc);
+  updC7(cur,allProds,lc);
 
-  const dropItems=['<div class="dropdown-item"><label><input type="checkbox" '+(prodFilter.length===0?"checked":"")+'  onchange="setProdFilter([])"> 전체</label></div>',
-    ...allProds.map(p=>`<div class="dropdown-item"><label><input type="checkbox" ${prodFilter.includes(p)?"checked":""} onchange="toggleProd('${p.replace(/'/g,"\\'")}')"> ${p.replace(/\[.*?\]/g,"").trim().slice(0,30)}</label></div>`)
-  ].join("");
+  // TOP3
+  const sorted=[...cur2M].sort((a,b)=>b.score-a.score);
+  const rankColors=['#D93030','#E88C00','#888'];
+  document.getElementById('top3-sub').textContent=`${activeM}월 — 영향력 점수 기준`;
+  document.getElementById('top3').innerHTML=sorted.slice(0,3).map((r,i)=>{
+    const sl=scoreLevel(r.score);
+    const stars='★'.repeat(r.rating)+'☆'.repeat(3-r.rating);
+    return`<div class="top3-card">
+      <div class="top3-rank"><div class="top3-rank-num" style="background:${rankColors[i]}">${i+1}</div>${i===0?`<span style="color:${rankColors[0]};font-size:10px;font-weight:600">최고 영향</span>`:''}</div>
+      <div class="top3-score">${r.score}<span class="u">점</span></div>
+      <span class="top3-badge" style="background:${sl.bg};color:${sl.color}">${sl.lv} · ${stars} ${r.rating}점</span>
+      <div class="top3-content">${r.content}</div>
+      <div class="top3-meta">${r.date}</div>
+      <div class="top3-prod">${r.prodName}</div>
+    </div>`;
+  }).join('')||'<div style="padding:20px;text-align:center;color:#CCC;font-size:12px">해당 월 데이터가 없습니다</div>';
 
-  ['chart-neg-trend','chart-neg-rating'].forEach(destroyChart);
-
-  document.getElementById("tab2-content").innerHTML=`
-    <div class="kpi-grid">${kpiHtml(kpi1)}</div>
-    <div class="kpi-grid">${kpiHtml(kpi2)}</div>
-
-    <div class="chart-grid-2">
-      <div class="chart-card">
-        <div class="chart-title">총 부정후기 추이</div>
-        <div class="chart-sub">3점 이하 — ${selYear}년 vs ${selYear-1}년</div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-rect" style="background:#1A1A1A"></div>${selYear}년</div>
-          <div class="legend-item"><div class="legend-rect" style="background:#E8E4DC"></div>${selYear-1}년</div>
-        </div>
-        <canvas id="chart-neg-trend" height="200"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">월별 평점별 부정후기</div>
-        <div class="chart-sub">${selYear}년 1·2·3점</div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#E53E3E"></div>1점</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#4A90D9"></div>2점</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#C9A84C"></div>3점</div>
-        </div>
-        <canvas id="chart-neg-rating" height="200"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-grid-2">
-      <div class="chart-card">
-        <div class="chart-title">카테고리별 부정후기</div>
-        <div class="chart-sub">${selYear}년 누적</div>
-        ${catBars||'<div style="color:#888;font-size:12px;padding:20px 0;text-align:center">데이터 없음</div>'}
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">상품별 부정후기</div>
-        <div class="chart-sub">${selYear}년 — 드롭다운 필터</div>
-        <div class="dropdown-wrap">
-          <button class="dropdown-btn" onclick="toggleDrop()">
-            <span>${prodFilter.length?prodFilter.length+"개 선택됨":"전체 상품"}</span><span id="drop-arrow">▼</span>
-          </button>
-          <div class="dropdown-list" id="drop-list">${dropItems}</div>
-        </div>
-        ${prodBars||'<div style="color:#888;font-size:12px;padding:20px 0;text-align:center">데이터 없음</div>'}
-      </div>
-    </div>
-
-    <div class="chart-card full">
-      <div class="chart-title">부정후기 원본 목록</div>
-      <div class="chart-sub">${activeM}월 — 평점별 탭 / 영향력 점수 순</div>
-      <div class="review-tabs">
-        <button class="rtab${activeRTab===1?" active":""}" onclick="setRTab(1)">1점 (${cur2M.filter(r=>r.rating===1).length}건)</button>
-        <button class="rtab${activeRTab===2?" active":""}" onclick="setRTab(2)">2점 (${cur2M.filter(r=>r.rating===2).length}건)</button>
-        <button class="rtab${activeRTab===3?" active":""}" onclick="setRTab(3)">3점 (${cur2M.filter(r=>r.rating===3).length}건)</button>
-        <button class="rtab${activeRTab===99?" active":""}" onclick="setRTab(99)">영향력 높은 순</button>
-      </div>
-      <div class="review-list" id="review-list"></div>
-    </div>
-  `;
-
-  requestAnimationFrame(()=>{
-    const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{grid:{display:false},ticks:{font:{size:11},color:"#888"}},y:{grid:{color:"#F0EDE7"},ticks:{font:{size:10},color:"#888"}}}};
-
-    charts["chart-neg-trend"]=new Chart(document.getElementById("chart-neg-trend"),{
-      type:"line",
-      data:{labels:months.map(m=>`${m}`),datasets:[
-        {label:`${selYear-1}년`,data:negPrev,borderColor:"#E8E4DC",backgroundColor:"rgba(232,228,220,0.3)",fill:true,borderWidth:1.5,pointRadius:0,tension:0.4},
-        {label:`${selYear}년`,data:negCur,borderColor:"#1A1A1A",backgroundColor:"rgba(26,26,26,0.08)",fill:true,borderWidth:2,pointBackgroundColor:"#1A1A1A",pointRadius:3,tension:0.4},
-      ]},options:opts
-    });
-
-    charts["chart-neg-rating"]=new Chart(document.getElementById("chart-neg-rating"),{
-      type:"line",
-      data:{labels:months.map(m=>`${m}`),datasets:[
-        {label:"1점",data:r1,borderColor:"#E53E3E",borderWidth:2,pointBackgroundColor:"#E53E3E",pointRadius:3,fill:false,tension:0.4},
-        {label:"2점",data:r2,borderColor:"#4A90D9",borderWidth:2,pointBackgroundColor:"#4A90D9",pointRadius:3,fill:false,tension:0.4},
-        {label:"3점",data:r3,borderColor:"#C9A84C",borderWidth:2,pointBackgroundColor:"#C9A84C",pointRadius:3,fill:false,tension:0.4},
-      ]},options:opts
-    });
-
-    renderReviews(cur2M);
-  });
+  // 전체 리뷰 테이블
+  document.getElementById('rv-title').childNodes[0].textContent=`${activeM}월 부정후기 전체 목록`;
+  document.getElementById('rv-tbody').innerHTML=sorted.map((r,i)=>{
+    const sl=scoreLevel(r.score);
+    const stars='★'.repeat(r.rating)+'☆'.repeat(3-r.rating);
+    const rColor={1:'#D93030',2:'#E88C00',3:'#888'}[r.rating];
+    const helpTxt=r.help>=5?`<span style="color:#D93030;font-weight:600">${r.help}</span>`:r.help>=1?`<span style="color:#888">${r.help}</span>`:`<span style="color:#CCC">0</span>`;
+    return`<tr>
+      <td style="text-align:center;font-weight:600;color:#999;font-size:11px">${i+1}</td>
+      <td><span style="color:${rColor};font-weight:600;font-size:11px">${stars}</span></td>
+      <td style="text-align:center"><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${r.score}점</span></td>
+      <td><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${sl.lv}</span></td>
+      <td style="text-align:center">${helpTxt}</td>
+      <td style="color:#333;line-height:1.6;word-break:keep-all">${r.content}</td>
+      <td style="color:#999;font-size:10px;word-break:keep-all">${r.prodName}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;padding:24px;color:#CCC;font-size:12px">해당 월 데이터가 없습니다</td></tr>';
 }
 
-function renderReviews(cur2M){
-  const sorted=activeRTab===99?[...cur2M].sort((a,b)=>b.score-a.score):
-    cur2M.filter(r=>r.rating===activeRTab).sort((a,b)=>b.score-a.score);
-  const stars=n=>"★".repeat(n)+"☆".repeat(3-n);
-  const rColor={1:"#E53E3E",2:"#C9A84C",3:"#888"};
-  const html=sorted.length?sorted.map(rv=>`
-    <div class="review-item" style="background:${levelBg[rv.level]}">
-      <div class="review-meta">
-        <div class="review-meta-left">
-          <span class="review-rating" style="color:${rColor[rv.rating]}">${stars(rv.rating)} ${rv.rating}점</span>
-          <span class="review-writer">${rv.writer}</span>
-          <span class="review-date">${rv.date}</span>
-          ${rv.help>0?`<span class="review-help">도움 ${rv.help}</span>`:""}
-        </div>
-        <span class="score-badge" style="background:${levelBg[rv.level]};color:${levelColor[rv.level]};border:0.5px solid ${levelColor[rv.level]}50">
-          ${rv.level} ${rv.score}점
-        </span>
-      </div>
-      <div class="review-content">${rv.content}</div>
-      <div class="review-prod">${rv.prodName}</div>
-    </div>`).join("")
-    :'<div style="text-align:center;padding:40px;color:#888;font-size:13px">해당 월 데이터가 없습니다</div>';
-  document.getElementById("review-list").innerHTML=html;
+let ddO=false;
+function buildDd(allProds,lc){
+  document.getElementById('ddlist').innerHTML=[
+    `<div class="dditem"><input type="checkbox" id="ca" ${window.selP?.length===allProds.length?'checked':''} onchange="taAll(this)"><label for="ca" style="cursor:pointer;font-weight:600">전체 선택</label></div>`,
+    ...allProds.map((p,i)=>`<div class="dditem"><input type="checkbox" id="cp${i}" ${window.selP?.includes(p)?'checked':''} onchange="tProd('${p.replace(/'/g,"\\'")}',this)"><label for="cp${i}" style="cursor:pointer">${p.replace(/\[.*?\]/g,'').trim().slice(0,30)}</label></div>`)
+  ].join('');
+}
+function toggleDd(){ddO=!ddO;document.getElementById('ddlist').classList.toggle('open',ddO);document.getElementById('ddarr').textContent=ddO?'▲':'▼';}
+function taAll(cb){
+  const p2=parseTab2();const cur=p2.filter(r=>r.year===selYear);
+  const allProds=[...new Set(cur.map(r=>r.prodName).filter(Boolean))].sort();
+  const lc=['#111','#D93030','#4A90D9','#C49A00','#1A8A5A','#888','#9B59B6','#E67E22'];
+  window.selP=cb.checked?[...allProds]:[];
+  buildDd(allProds,lc);updC7(cur,allProds,lc);
+  document.getElementById('ddlbl').textContent=window.selP.length===allProds.length?'전체 상품 선택':`${window.selP.length}개 선택됨`;
+}
+function tProd(p,cb){
+  const p2=parseTab2();const cur=p2.filter(r=>r.year===selYear);
+  const allProds=[...new Set(cur.map(r=>r.prodName).filter(Boolean))].sort();
+  const lc=['#111','#D93030','#4A90D9','#C49A00','#1A8A5A','#888','#9B59B6','#E67E22'];
+  window.selP=cb.checked?[...(window.selP||[]),p]:(window.selP||[]).filter(x=>x!==p);
+  buildDd(allProds,lc);updC7(cur,allProds,lc);
+  document.getElementById('ddlbl').textContent=window.selP.length===allProds.length?'전체 상품 선택':`${window.selP.length}개 선택됨`;
+}
+function updC7(cur,allProds,lc){
+  const ml=['1','2','3','4','5','6','7','8','9','10','11','12'];
+  const sp=window.selP||allProds;
+  const datasets=sp.map(p=>({
+    label:p.replace(/\[.*?\]/g,'').trim().slice(0,20),
+    data:ml.map((_,i)=>cur.filter(r=>r.prodName===p&&r.month===i+1).length||null),
+    borderColor:lc[allProds.indexOf(p)%lc.length],borderWidth:1.5,pointRadius:3,fill:false,tension:0.4,
+  }));
+  mkChart('c7',{type:'line',data:{labels:ml,datasets},
+    options:{...baseOpts,plugins:{...baseOpts.plugins,legend:{display:sp.length<=4,position:'bottom',labels:{font:{size:8,family:'Inter'},boxWidth:8,padding:6}}}}});
 }
 
-function setRTab(t){
-  activeRTab=t;
-  document.querySelectorAll(".rtab").forEach(b=>b.classList.remove("active"));
-  document.querySelectorAll(".rtab")[t===99?3:t-1]?.classList.add("active");
-  const p2=parseTab2();
-  const p1=parseTab1();
-  const activeM=selMonth||getLatestMonth(p1);
-  const cur2M=p2.filter(r=>r.year===selYear&&r.month===activeM);
-  renderReviews(cur2M);
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ddwrap')&&ddO){ddO=false;document.getElementById('ddlist').classList.remove('open');document.getElementById('ddarr').textContent='▼';}
+});
+
+function sw(t){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p'+t).classList.add('on');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('n'+t).classList.add('on');
+  document.getElementById('ptit').textContent=t===1?'SIDIZ 네이버 실적 대시보드':'네이버 부정후기 추이';
+  render();
 }
 
-let dropOpen=false;
-function toggleDrop(){
-  dropOpen=!dropOpen;
-  document.getElementById("drop-list").classList.toggle("open",dropOpen);
-  document.getElementById("drop-arrow").textContent=dropOpen?"▲":"▼";
-}
-function setProdFilter(arr){prodFilter=arr;renderTab2();}
-function toggleProd(p){
-  prodFilter=prodFilter.includes(p)?prodFilter.filter(x=>x!==p):[...prodFilter,p];
-  renderTab2();
-}
-
-// 시작
 fetchAll();
 </script>
 </body>
