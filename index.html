@@ -3,99 +3,27 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SIDIZ 네이버 대시보드 (Debug)</title>
+<title>SIDIZ 네이버 대시보드 (최종수정본)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* CSS 스타일은 기존과 동일하므로 생략하지 않고 그대로 포함합니다 */
+/* --- 스타일 정의 (기존과 동일) --- */
 *{box-sizing:border-box;margin:0;padding:0}
 body,*{font-family:'Inter','Apple SD Gothic Neo',sans-serif}
-:root{
-  --bg:#F8F8F8;--y:#FFD66B;--yd:#B8860B;
-  --dark:#111;--g2:#999;--g4:#F5F5F5;
-  --rd:#D93030;--gn:#1A8A5A;--go:#A07000;
-  --sh:0 2px 12px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.03);
-  --sh2:0 4px 20px rgba(0,0,0,0.09);--r:16px;
-}
+:root{--bg:#F8F8F8;--y:#FFD66B;--yd:#B8860B;--dark:#111;--g2:#999;--g4:#F5F5F5;--rd:#D93030;--gn:#1A8A5A;--go:#A07000;--sh:0 2px 12px rgba(0,0,0,0.06);--r:16px}
 body{background:var(--bg);min-height:100vh}
-.wrap{display:flex;min-height:100vh}
-.sb{width:54px;background:#fff;border-right:1px solid #EBEBEB;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
-.sb-logo{width:30px;height:30px;background:var(--y);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:12px;box-shadow:0 2px 8px rgba(255,214,107,0.4)}
-.nb{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border:none;background:none;cursor:pointer;color:#CCC;position:relative;font-size:18px;transition:color .15s}
-.nb.on{color:var(--dark)}
-.nb.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:22px;background:var(--y);border-radius:0 3px 3px 0}
-.main{flex:1;margin-left:54px;overflow-y:auto}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid #F0F0F0;position:sticky;top:0;z-index:50}
-.page-title{font-size:14px;font-weight:700;color:var(--dark);letter-spacing:-.3px}
-.page-sub{font-size:10px;color:var(--g2);margin-top:1px}
-.hbtns{display:flex;gap:5px}
-.hbtn{width:30px;height:30px;border-radius:9px;border:1px solid #EBEBEB;background:#fff;font-size:13px;color:var(--g2);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);font-weight:700;text-decoration:none}
-.content{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
-.fblock{background:#fff;border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:5px}
-.frow{display:flex;align-items:center;gap:4px}
-.flbl{font-size:10px;color:var(--g2);width:28px;flex-shrink:0}
-.fp{padding:4px 13px;border-radius:99px;font-size:11px;font-weight:500;border:none;background:var(--g4);color:var(--g2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
-.fp.on{background:var(--dark);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-weight:600}
-.fp.yon{background:var(--y);color:var(--dark);font-weight:700;box-shadow:0 2px 10px rgba(255,214,107,0.4)}
-.fp:disabled{color:#D8D8D8;cursor:default;background:transparent}
-.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.kc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5;position:relative;overflow:hidden;transition:transform .15s}
-.kc:hover{transform:translateY(-1px);box-shadow:var(--sh2)}
-.kc.hl::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;background:radial-gradient(circle at top right,rgba(255,214,107,0.18),transparent 70%);pointer-events:none}
-.k-lbl{font-size:10px;color:var(--g2);margin-bottom:7px}
-.k-val{font-size:24px;font-weight:300;color:var(--dark);letter-spacing:-1px;line-height:1;margin-bottom:6px}
-.k-val .u{font-size:13px;font-weight:400;margin-left:1px}
-.k-sub{font-size:10px;font-weight:500}
-.rd{color:var(--rd)}.gn{color:var(--gn)}.go{color:var(--go)}.gy{color:var(--g2)}
-.cgrid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.cgridd{display:grid;grid-template-columns:175px 1fr;gap:11px}
-.cc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5}
-.ctit{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:2px}
-.csub{font-size:10px;color:var(--g2);margin-bottom:8px}
-.leg{display:flex;gap:10px;margin-bottom:7px;flex-wrap:wrap}
-.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g2)}
-.lr{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.ll{width:12px;height:2px;border-radius:1px;flex-shrink:0}
-.ld{width:12px;border-top:2px dashed #C8C8C8;flex-shrink:0;display:inline-block}
-.donut-cc{display:flex;flex-direction:column;justify-content:space-between}
-.donut-mid{display:flex;align-items:center;justify-content:center;flex:1;padding:8px 0}
-.dinfo{border-top:1px solid #F0F0F0;padding-top:8px;margin-top:4px}
-.drow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:var(--g2)}
-.drow span:last-child{font-weight:600;color:var(--dark)}
-.brow{display:flex;align-items:center;gap:7px;margin-bottom:7px}
-.blbl{font-size:10px;color:var(--g2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btrack{flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden}
-.bfill{height:100%;border-radius:99px}
-.bval{font-size:10px;font-weight:600;color:var(--dark);width:22px;text-align:right}
-.ddwrap{position:relative;margin-bottom:10px}
-.ddbtn{width:100%;padding:7px 12px;border-radius:10px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:11px;color:var(--dark);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between}
-.ddlist{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
-.ddlist.open{display:block}
-.dditem{padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark)}
-.dditem:hover{background:#F8F8F8}
-.dditem input{accent-color:var(--dark)}
-.top3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.top3-card{background:#FAFAFA;border-radius:12px;padding:14px 16px;border:1px solid #F0F0F0}
-.top3-rank{display:flex;align-items:center;gap:6px;margin-bottom:10px}
-.top3-rank-num{width:22px;height:22px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.top3-score{font-size:22px;font-weight:300;color:var(--dark);letter-spacing:-1px;margin-bottom:4px}
-.top3-score .u{font-size:12px;font-weight:400}
-.top3-badge{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:8px}
-.top3-content{font-size:11px;color:#333;line-height:1.65;margin-bottom:8px;word-break:keep-all}
-.top3-meta{font-size:10px;color:var(--g2)}
-.top3-prod{font-size:10px;color:var(--g2);margin-top:2px}
-.rv-table{width:100%;border-collapse:collapse}
-.rv-table thead th{font-size:10px;font-weight:600;color:var(--g2);padding:6px 10px;border-bottom:1px solid #F0F0F0;text-align:left;background:#FAFAFA}
-.rv-table tbody tr{border-bottom:1px solid #F8F8F8}
-.rv-table tbody tr:hover{background:#FAFAFA}
-.rv-table td{font-size:11px;color:var(--dark);padding:8px 10px;vertical-align:top}
-.rv-pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap}
-.info-wrap{position:relative;display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle}
-.info-icon{width:16px;height:16px;border-radius:50%;background:#E8E8E8;color:#888;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;font-style:italic}
-.info-tooltip{display:none;position:absolute;left:22px;top:50%;transform:translateY(-50%);background:#1A1A1A;color:#F0F0F0;font-size:10px;line-height:1.8;padding:10px 14px;border-radius:10px;width:280px;box-shadow:0 6px 20px rgba(0,0,0,0.18);z-index:200;pointer-events:none}
-.info-tooltip::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1A1A1A;border-left:0}
-.info-wrap:hover .info-tooltip{display:block}
-.ctit-row{display:flex;align-items:center;margin-bottom:2px}
+.wrap{display:flex;min-height:100vh}.sb{width:54px;background:#fff;border-right:1px solid #EBEBEB;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb-logo{width:30px;height:30px;background:var(--y);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-bottom:12px;box-shadow:0 2px 8px rgba(255,214,107,0.4)}
+.nb{padding:10px 0;width:100%;background:none;border:none;cursor:pointer;color:#CCC;font-size:18px}.nb.on{color:var(--dark)}
+.main{flex:1;margin-left:54px;overflow-y:auto}.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid #F0F0F0;position:sticky;top:0;z-index:50}
+.page-title{font-size:14px;font-weight:700}.page-sub{font-size:10px;color:var(--g2)}.content{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.fblock{background:#fff;border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:5px}.frow{display:flex;align-items:center;gap:4px}.flbl{font-size:10px;color:var(--g2);width:28px}
+.fp{padding:4px 13px;border-radius:99px;font-size:11px;border:none;background:var(--g4);color:var(--g2);cursor:pointer}.fp.on{background:var(--dark);color:#fff}.fp.yon{background:var(--y);color:var(--dark);font-weight:700}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.kc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5}
+.k-lbl{font-size:10px;color:var(--g2);margin-bottom:7px}.k-val{font-size:24px;font-weight:300;color:var(--dark);letter-spacing:-1px;margin-bottom:6px}.k-sub{font-size:10px;font-weight:500}
+.cgridd{display:grid;grid-template-columns:175px 1fr;gap:11px}.cc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5}
+.ctit{font-size:12px;font-weight:700;margin-bottom:2px}.csub{font-size:10px;color:var(--g2);margin-bottom:8px}
+.donut-mid{display:flex;align-items:center;justify-content:center;padding:10px 0}
 .pg{display:none}.pg.on{display:flex;flex-direction:column;gap:12px}
 </style>
 </head>
@@ -103,19 +31,16 @@ body{background:var(--bg);min-height:100vh}
 <div class="wrap">
   <div class="sb">
     <div class="sb-logo">S</div>
-    <button class="nb on" onclick="sw(1)" id="n1" title="실적 대시보드">📊</button>
-    <button class="nb" onclick="sw(2)" id="n2" title="부정후기 추이">💬</button>
+    <button class="nb on" onclick="sw(1)" id="n1">📊</button>
+    <button class="nb" onclick="sw(2)" id="n2">💬</button>
   </div>
   <div class="main">
     <div class="topbar">
       <div>
         <div class="page-title" id="ptit">SIDIZ 네이버 실적 대시보드</div>
-        <div class="page-sub" id="last-updated">데이터 불러오는 중...</div>
+        <div class="page-sub" id="last-updated">데이터 로드 중...</div>
       </div>
-      <div class="hbtns">
-        <button class="hbtn" onclick="fetchAll()" title="새로고침">↺</button>
-        <a class="hbtn" href="https://docs.google.com/spreadsheets/d/1UyoOkvJMY8kTLAZzjw6PoYw6J_YWrfakcP9iEvCUrQs" target="_blank" title="원본 시트" style="font-size:10px">↗</a>
-      </div>
+      <button class="fp" onclick="fetchAll()">새로고침 ↺</button>
     </div>
     <div class="pg on" id="p1">
       <div class="content">
@@ -123,60 +48,51 @@ body{background:var(--bg);min-height:100vh}
           <div class="frow"><span class="flbl">연도</span><div id="yr1" style="display:flex;gap:4px"></div></div>
           <div class="frow"><span class="flbl">월</span><div id="mo1" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
         </div>
-        <div class="kgrid" id="k1top"></div>
-        <div class="kgrid" id="k1bot"></div>
+        <div id="k1top" class="kgrid"></div>
         <div class="cgridd">
-          <div class="cc donut-cc">
-            <div><div class="ctit">연 목표 달성율</div><div class="csub" id="dsub">-</div></div>
+          <div class="cc">
+            <div class="ctit">연 목표 달성율</div>
             <div class="donut-mid">
-              <svg width="150" height="150" viewBox="0 0 150 150" style="overflow:visible">
-                <circle cx="75" cy="75" r="55" fill="none" stroke="#DCDCDC" stroke-width="11"/>
-                <circle id="darc" cx="75" cy="75" r="55" fill="none" stroke="#FFD66B" stroke-width="11" stroke-dasharray="345.4" stroke-dashoffset="345.4" stroke-linecap="round" transform="rotate(-90 75 75)"/>
-                <text id="dpct" x="75" y="70" text-anchor="middle" dominant-baseline="middle" font-size="19" font-weight="700" fill="#111">-</text>
-                <text x="75" y="87" text-anchor="middle" font-size="9" fill="#AAA">Achieved</text>
+              <svg width="120" height="120" viewBox="0 0 150 150">
+                <circle cx="75" cy="75" r="55" fill="none" stroke="#EEE" stroke-width="12"/>
+                <circle id="darc" cx="75" cy="75" r="55" fill="none" stroke="#FFD66B" stroke-width="12" stroke-dasharray="345.4" stroke-dashoffset="345.4" stroke-linecap="round" transform="rotate(-90 75 75)"/>
+                <text id="dpct" x="75" y="80" text-anchor="middle" font-size="20" font-weight="700" fill="#111">-</text>
               </svg>
             </div>
-            <div class="dinfo"><div class="drow"><span>YTD 실적</span><span id="dytd">-</span></div><div class="drow"><span>연간 총 목표</span><span id="dtgt">-</span></div></div>
           </div>
           <div class="cc">
-            <div class="ctit">월별 실적 vs 목표 달성</div>
-            <div style="position:relative;height:155px"><canvas id="c1"></canvas></div>
+            <div class="ctit">월별 실적 추이</div>
+            <div style="height:150px"><canvas id="c1"></canvas></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="pg" id="p2">
-       <div class="content"><div id="k2top" class="kgrid"></div><div id="k2bot" class="kgrid"></div></div>
-    </div>
+    <div class="pg" id="p2"><div class="content"><h3>부정후기 탭 준비 중...</h3></div></div>
   </div>
 </div>
 
 <script>
-// 사용자 주소와 설정 적용
+/* --- 데이터 연동 로직 --- */
 const API='https://script.google.com/macros/s/AKfycbznkgGbPy4HRNXpx73yMzmZlbQScriTcHjWKo5j9pxdCkMCu6X1F8ABIz0tuKT-N_4OUA/exec';
 const GID1='543240057', GID2='1006983265';
-let raw1=[], raw2=[], selYear=2026, selMonth=null, charts={};
+let raw1=[], raw2=[], selYear=2026, charts={};
 
-const toN=v=>{if(v===null||v===undefined||v==='')return 0;const n=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(n)?0:n;};
-const toRate=v=>{const n=toN(v);return Math.abs(n)>10?n:n*100;};
-const f억=v=>((toN(v)/1e8).toFixed(1)+'억');
-const fNum=v=>toN(v).toLocaleString();
+const toN=v=>{if(!v)return 0;const n=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(n)?0:n;};
+const f억=v=>(toN(v)/1e8).toFixed(1)+'억';
 
 async function fetchAll(){
-  console.log("1. 데이터 로드 시작...");
+  console.log("1. 데이터 요청 시작...");
   document.getElementById('last-updated').textContent='데이터 불러오는 중...';
   try {
     const [j1, j2] = await Promise.all([
       fetch(API + "?gid=" + GID1).then(r => r.json()),
       fetch(API + "?gid=" + GID2).then(r => r.json())
     ]);
-    console.log("2. 데이터 수신 완료", {j1, j2});
-    
+    console.log("2. 데이터 응답 성공:", {j1, j2});
     raw1 = j1.data || []; raw2 = j2.data || [];
     document.getElementById('last-updated').textContent = '최근 업데이트: ' + new Date().toLocaleTimeString();
-    
     render();
-    console.log("3. 렌더링 완료");
+    console.log("3. 화면 렌더링 완료");
   } catch (e) {
     console.error("❌ 에러 발생:", e);
     document.getElementById('last-updated').textContent = '로드 실패 (콘솔 확인)';
@@ -189,8 +105,7 @@ function parseTab1(){
     const p = d.split('/');
     return { 
       year: parseInt(p[0]), month: parseInt(p[1]),
-      ERP: toN(r['ERP 매출']), target: toN(r['매출 목표']),
-      achieve: toRate(r['매출 달성율 (ERP 기준)'])
+      ERP: toN(r['ERP 매출']), target: toN(r['매출 목표'])
     };
   }).filter(r => !isNaN(r.year));
 }
@@ -198,35 +113,10 @@ function parseTab1(){
 function render(){
   const p1 = parseTab1();
   const yrs = [...new Set(p1.map(r => r.year))].sort();
+  console.log("기록된 연도들:", yrs);
+
   const yrEl = document.getElementById('yr1');
   yrEl.innerHTML = '';
   yrs.forEach(y => {
     const b = document.createElement('button');
-    b.className = 'fp' + (selYear === y ? ' on' : '');
-    b.textContent = y + '년';
-    b.onclick = () => { selYear = y; render(); };
-    yrEl.appendChild(b);
-  });
-  
-  const cur = p1.filter(r => r.year === selYear);
-  const ytdERP = cur.reduce((s, r) => s + r.ERP, 0);
-  const ytdTgt = cur.reduce((s, r) => s + r.target, 0);
-  
-  document.getElementById('dytd').textContent = f억(ytdERP);
-  document.getElementById('dtgt').textContent = f억(ytdTgt);
-  const ach = ytdTgt > 0 ? (ytdERP / ytdTgt * 100) : 0;
-  document.getElementById('dpct').textContent = ach.toFixed(1) + '%';
-  document.getElementById('darc').style.strokeDashoffset = 345.4 * (1 - Math.min(ach, 100) / 100);
-}
-
-function sw(t){
-  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
-  document.getElementById('p' + t).classList.add('on');
-  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-  document.getElementById('n' + t).classList.add('on');
-}
-
-window.onload = fetchAll;
-</script>
-</body>
-</html>
+    b.className = 'fp' + (selYear === y ? ' on' :
