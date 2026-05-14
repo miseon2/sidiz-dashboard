@@ -1,62 +1,268 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>SIDIZ 최종 연결 확인</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        #status { font-weight: bold; color: blue; }
-        pre { background: #eee; padding: 10px; overflow: auto; max-height: 200px; font-size: 12px; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIDIZ 네이버 대시보드 (최종 완성본)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body,*{font-family:'Inter','Apple SD Gothic Neo',sans-serif}
+:root{
+  --bg:#F8F8F8;--y:#FFD66B;--yd:#B8860B;
+  --dark:#111;--g2:#999;--g4:#F5F5F5;
+  --rd:#D93030;--gn:#1A8A5A;--go:#A07000;
+  --sh:0 2px 12px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.03);
+  --sh2:0 4px 20px rgba(0,0,0,0.09);--r:16px;
+}
+body{background:var(--bg);min-height:100vh}
+.wrap{display:flex;min-height:100vh}
+.sb{width:54px;background:#fff;border-right:1px solid #EBEBEB;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb-logo{width:30px;height:30px;background:var(--y);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:12px;box-shadow:0 2px 8px rgba(255,214,107,0.4)}
+.nb{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border:none;background:none;cursor:pointer;color:#CCC;position:relative;font-size:18px;transition:color .15s}
+.nb.on{color:var(--dark)}
+.nb.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:22px;background:var(--y);border-radius:0 3px 3px 0}
+.main{flex:1;margin-left:54px;overflow-y:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid #F0F0F0;position:sticky;top:0;z-index:50}
+.page-title{font-size:14px;font-weight:700;color:var(--dark);letter-spacing:-.3px}
+.page-sub{font-size:10px;color:var(--g2);margin-top:1px}
+.hbtns{display:flex;gap:5px}
+.hbtn{width:30px;height:30px;border-radius:9px;border:1px solid #EBEBEB;background:#fff;font-size:13px;color:var(--g2);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);font-weight:700;text-decoration:none}
+.content{padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.fblock{background:#fff;border-radius:var(--r);padding:10px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:5px}
+.frow{display:flex;align-items:center;gap:4px}
+.flbl{font-size:10px;color:var(--g2);width:28px;flex-shrink:0}
+.fp{padding:4px 13px;border-radius:99px;font-size:11px;font-weight:500;border:none;background:var(--g4);color:var(--g2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+.fp.on{background:var(--dark);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-weight:600}
+.fp.yon{background:var(--y);color:var(--dark);font-weight:700;box-shadow:0 2px 10px rgba(255,214,107,0.4)}
+.fp:disabled{color:#D8D8D8;cursor:default;background:transparent}
+.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.kc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5;position:relative;overflow:hidden;transition:transform .15s}
+.kc:hover{transform:translateY(-1px);box-shadow:var(--sh2)}
+.kc.hl::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;background:radial-gradient(circle at top right,rgba(255,214,107,0.18),transparent 70%);pointer-events:none}
+.k-lbl{font-size:10px;color:var(--g2);margin-bottom:7px}
+.k-val{font-size:24px;font-weight:300;color:var(--dark);letter-spacing:-1px;line-height:1;margin-bottom:6px}
+.k-val .u{font-size:13px;font-weight:400;margin-left:1px}
+.k-sub{font-size:10px;font-weight:500}
+.rd{color:var(--rd)}.gn{color:var(--gn)}.go{color:var(--go)}.gy{color:var(--g2)}
+.cgrid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.cgridd{display:grid;grid-template-columns:175px 1fr;gap:11px}
+.cc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5}
+.ctit{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:2px}
+.csub{font-size:10px;color:var(--g2);margin-bottom:8px}
+.leg{display:flex;gap:10px;margin-bottom:7px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g2)}
+.lr{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.ll{width:12px;height:2px;border-radius:1px;flex-shrink:0}
+.ld{width:12px;border-top:2px dashed #C8C8C8;flex-shrink:0;display:inline-block}
+.donut-cc{display:flex;flex-direction:column;justify-content:space-between}
+.donut-mid{display:flex;align-items:center;justify-content:center;flex:1;padding:8px 0}
+.dinfo{border-top:1px solid #F0F0F0;padding-top:8px;margin-top:4px}
+.drow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:var(--g2)}
+.drow span:last-child{font-weight:600;color:var(--dark)}
+.brow{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.blbl{font-size:10px;color:var(--g2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btrack{flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden}
+.bfill{height:100%;border-radius:99px}
+.bval{font-size:10px;font-weight:600;color:var(--dark);width:22px;text-align:right}
+.ddwrap{position:relative;margin-bottom:10px}
+.ddbtn{width:100%;padding:7px 12px;border-radius:10px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:11px;color:var(--dark);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between}
+.ddlist{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
+.ddlist.open{display:block}
+.dditem{padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark)}
+.dditem:hover{background:#F8F8F8}
+.dditem input{accent-color:var(--dark)}
+.top3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.top3-card{background:#FAFAFA;border-radius:12px;padding:14px 16px;border:1px solid #F0F0F0}
+.top3-rank{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.top3-rank-num{width:22px;height:22px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.top3-score{font-size:22px;font-weight:300;color:var(--dark);letter-spacing:-1px;margin-bottom:4px}
+.top3-score .u{font-size:12px;font-weight:400}
+.top3-badge{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:8px}
+.top3-content{font-size:11px;color:#333;line-height:1.65;margin-bottom:8px;word-break:keep-all}
+.top3-meta{font-size:10px;color:var(--g2)}
+.top3-prod{font-size:10px;color:var(--g2);margin-top:2px}
+.rv-table{width:100%;border-collapse:collapse}
+.rv-table thead th{font-size:10px;font-weight:600;color:var(--g2);padding:6px 10px;border-bottom:1px solid #F0F0F0;text-align:left;background:#FAFAFA}
+.rv-table tbody tr{border-bottom:1px solid #F8F8F8}
+.rv-table tbody tr:hover{background:#FAFAFA}
+.rv-table td{font-size:11px;color:var(--dark);padding:8px 10px;vertical-align:top}
+.rv-pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;white-space:nowrap}
+.info-wrap{position:relative;display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle}
+.info-icon{width:16px;height:16px;border-radius:50%;background:#E8E8E8;color:#888;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;font-style:italic}
+.info-tooltip{display:none;position:absolute;left:22px;top:50%;transform:translateY(-50%);background:#1A1A1A;color:#F0F0F0;font-size:10px;line-height:1.8;padding:10px 14px;border-radius:10px;width:280px;box-shadow:0 6px 20px rgba(0,0,0,0.18);z-index:200;pointer-events:none}
+.info-tooltip::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1A1A1A;border-left:0}
+.info-wrap:hover .info-tooltip{display:block}
+.ctit-row{display:flex;align-items:center;margin-bottom:2px}
+.pg{display:none}.pg.on{display:flex;flex-direction:column;gap:12px}
+</style>
 </head>
 <body>
-    <div class="card">
-        <h2>📊 SIDIZ 데이터 연결 상태</h2>
-        <p>상태: <span id="status">연결 시도 중...</span></p>
-        <hr>
-        <h4>1번 시트 (실적) 데이터 샘플:</h4>
-        <pre id="debug1">기다리는 중...</pre>
-        <h4>2번 시트 (후기) 데이터 샘플:</h4>
-        <pre id="debug2">기다리는 중...</pre>
+<div class="wrap">
+  <div class="sb">
+    <div class="sb-logo">S</div>
+    <button class="nb on" onclick="sw(1)" id="n1" title="실적 대시보드">📊</button>
+    <button class="nb" onclick="sw(2)" id="n2" title="부정후기 추이">💬</button>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="ptit">SIDIZ 네이버 실적 대시보드</div>
+        <div class="page-sub" id="last-updated">데이터 확인 완료</div>
+      </div>
+      <div class="hbtns">
+        <button class="hbtn" onclick="fetchAll()" title="새로고침">↺</button>
+        <a class="hbtn" href="https://docs.google.com/spreadsheets/d/1UyoOkvJMY8kTLAZzjw6PoYw6J_YWrfakcP9iEvCUrQs" target="_blank" title="원본 시트" style="font-size:10px">↗</a>
+      </div>
     </div>
 
-    <script>
-        // 유저님의 실제 API 주소
-        const API = 'https://script.google.com/macros/s/AKfycbznkgGbPy4HRNXpx73yMzmZlbQScriTcHjWKo5j9pxdCkMCu6X1F8ABIz0tuKT-N_4OUA/exec';
-        const GID1 = '543240057';
-        const GID2 = '1006983265';
+    <div class="pg on" id="p1">
+      <div class="content">
+        <div class="fblock">
+          <div class="frow"><span class="flbl">연도</span><div id="yr1" style="display:flex;gap:4px"></div></div>
+          <div class="frow"><span class="flbl">월</span><div id="mo1" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+        </div>
+        <div class="kgrid" id="k1top"></div>
+        <div class="kgrid" id="k1bot"></div>
+        <div class="cgridd">
+          <div class="cc donut-cc">
+            <div><div class="ctit">연 목표 달성율</div><div class="csub" id="dsub">-</div></div>
+            <div class="donut-mid">
+              <svg width="150" height="150" viewBox="0 0 150 150" style="overflow:visible">
+                <circle cx="75" cy="75" r="55" fill="none" stroke="#DCDCDC" stroke-width="11"/>
+                <circle id="darc" cx="75" cy="75" r="55" fill="none" stroke="#FFD66B" stroke-width="11" stroke-dasharray="345.4" stroke-dashoffset="345.4" stroke-linecap="round" transform="rotate(-90 75 75)"/>
+                <text id="dpct" x="75" y="70" text-anchor="middle" dominant-baseline="middle" font-size="19" font-weight="700" fill="#111">-</text>
+                <text x="75" y="87" text-anchor="middle" font-size="9" fill="#AAA">Achieved</text>
+              </svg>
+            </div>
+            <div class="dinfo"><div class="drow"><span>YTD 실적</span><span id="dytd">-</span></div><div class="drow"><span>연간 총 목표</span><span id="dtgt">-</span></div></div>
+          </div>
+          <div class="cc">
+            <div class="ctit">월별 실적 추이</div>
+            <div style="height:155px"><canvas id="c1"></canvas></div>
+          </div>
+        </div>
+        <div class="cgrid2">
+           <div class="cc"><div class="ctit">구매자수 추이</div><div style="height:145px"><canvas id="c2"></canvas></div></div>
+           <div class="cc"><div class="ctit">환불 추이</div><div style="height:145px"><canvas id="c3"></canvas></div></div>
+        </div>
+        <div class="cc"><div class="ctit">리뷰수 추이 및 전년비</div><div style="height:135px"><canvas id="c4"></canvas></div></div>
+      </div>
+    </div>
 
-        async function testConnection() {
-            const statusEl = document.getElementById('status');
-            try {
-                console.log("데이터 요청 시작...");
-                
-                // 두 데이터를 동시에 가져옴
-                const [r1, r2] = await Promise.all([
-                    fetch(`${API}?gid=${GID1}`).then(res => res.json()),
-                    fetch(`${API}?gid=${GID2}`).then(res => res.json())
-                ]);
+    <div class="pg" id="p2">
+      <div class="content">
+        <div class="fblock">
+          <div class="frow"><span class="flbl">연도</span><div id="yr2" style="display:flex;gap:4px"></div></div>
+          <div class="frow"><span class="flbl">월</span><div id="mo2" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+        </div>
+        <div class="kgrid" id="k2top"></div>
+        <div class="kgrid" id="k2bot"></div>
+        <div class="cgrid2">
+          <div class="cc">
+            <div class="ctit">총 부정후기 추이</div>
+            <div style="height:148px"><canvas id="c5"></canvas></div>
+          </div>
+          <div class="cc">
+            <div class="ctit">월별 평점별 부정후기</div>
+            <div style="height:148px"><canvas id="c6"></canvas></div>
+          </div>
+        </div>
+        <div class="cc">
+          <div class="ctit">🔥 영향력 Top 3 부정후기</div>
+          <div class="top3-grid" id="top3"></div>
+        </div>
+        <div class="cc">
+          <div class="ctit">부정후기 전체 목록</div>
+          <table class="rv-table">
+            <thead><tr><th>순위</th><th>평점</th><th>영향력</th><th>도움수</th><th>리뷰 내용</th><th>상품</th></tr></thead>
+            <tbody id="rvbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-                console.log("데이터 수신 성공!");
-                statusEl.textContent = "✅ 연결 성공! 데이터 수신 완료";
-                statusEl.style.color = "green";
+<script>
+const API='https://script.google.com/macros/s/AKfycbznkgGbPy4HRNXpx73yMzmZlbQScriTcHjWKo5j9pxdCkMCu6X1F8ABIz0tuKT-N_4OUA/exec';
+const GID1='543240057', GID2='1006983265';
+let raw1=[], raw2=[], selYear=2026, selMonth=null, charts={};
 
-                // 화면에 데이터 일부 출력
-                document.getElementById('debug1').textContent = JSON.stringify(r1.data.slice(0, 2), null, 2);
-                document.getElementById('debug2').textContent = JSON.stringify(r2.data.slice(0, 2), null, 2);
+const toN=v=>{if(!v)return 0;const n=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(n)?0:n;};
+const f억=v=>(toN(v)/1e8).toFixed(1)+'억';
+const fWon=v=>toN(v).toLocaleString()+'원';
+const fNum=v=>toN(v).toLocaleString();
 
-            } catch (err) {
-                console.error("에러 발생:", err);
-                statusEl.textContent = "❌ 연결 실패: " + err.message;
-                statusEl.style.color = "red";
-            }
-        }
+async function fetchAll(){
+  document.getElementById('last-updated').textContent='데이터 로드 중...';
+  try {
+    const [j1, j2] = await Promise.all([
+      fetch(`${API}?gid=${GID1}`).then(r => r.json()),
+      fetch(`${API}?gid=${GID2}`).then(r => r.json())
+    ]);
+    raw1 = j1.data || []; raw2 = j2.data || [];
+    console.log("데이터 수신 완료", {raw1, raw2});
+    document.getElementById('last-updated').textContent = 'Last update: ' + new Date().toLocaleTimeString();
+    render();
+  } catch (e) {
+    console.error("데이터 로드 실패:", e);
+    document.getElementById('last-updated').textContent = '연결 실패';
+  }
+}
 
-        // 페이지 로드 시 바로 실행
-        window.onload = testConnection;
-    </script>
-</body>
-</html>
+function parseTab1(){
+  return raw1.map(r => {
+    const d = String(r['날짜'] || '');
+    const p = d.split('/');
+    const year = parseInt(p[0]), month = parseInt(p[1]);
+    const achRaw = r['매출 달성율 (ERP 기준)'];
+    const achieve = toN(achRaw) > 10 ? toN(achRaw) : toN(achRaw) * 100;
+    return { 
+      year, month,
+      ERP: toN(r['ERP 매출']), target: toN(r['매출 목표']),
+      achieve, buyers: toN(r['구매자수(명)']),
+      refundAmt: toN(r['환불금액']), refundCnt: toN(r['환불건']),
+      reviews: toN(r['리뷰수']), aov: toN(r['객단가(원) *ERP 매출 기준']),
+      refRate: toN(r['환불비율(금액)']) * 100, reviewYoy: toN(r['리뷰수 전년비']) * 100
+    };
+  }).filter(r => !isNaN(r.year));
+}
+
+function parseTab2(){
+  return raw2.map(r => {
+    const d = String(r['리뷰등록일'] || '');
+    const p = d.split('-');
+    const year = parseInt(p[0]), month = parseInt(p[1]);
+    const rating = parseInt(r['구매자 평점']) || 0;
+    const content = String(r['리뷰상세내용'] || '');
+    const help = parseInt(r['리뷰도움수']) || 0;
+    const score = (3-rating)*2 + help + (content.length > 50 ? 5 : 1);
+    return { year, month, rating, content, help, score, prodName: r['상품명'], date: d };
+  }).filter(r => !isNaN(r.year) && r.rating <= 3);
+}
+
+function render(){
+  const p1 = parseTab1(), p2 = parseTab2();
+  const yrs = [...new Set([...p1.map(r=>r.year), ...p2.map(r=>r.year)])].sort();
+  
+  // 연도 필터
+  [1,2].forEach(t => {
+    const yrEl = document.getElementById(`yr${t}`); yrEl.innerHTML = '';
+    yrs.forEach(y => {
+      const b = document.createElement('button');
+      b.className = 'fp' + (selYear === y ? ' on' : '');
+      b.textContent = y + '년';
+      b.onclick = () => { selYear = y; render(); };
+      yrEl.appendChild(b);
+    });
+  });
+
+  const cur1 = p1.filter(r => r.year === selYear);
+  const cur2 = p2.filter(r => r.year === selYear);
+  const activeM = selMonth || (cur1.length ? Math.max(...cur1.map(r=>r.month)) : 12);
+
+  // 실적 탭 렌더링
+  const ytdERP = cur1.reduce((s, r) => s + r.ERP, 0);
+  const ytdTgt = cur1.reduce((s, r
