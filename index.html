@@ -93,4 +93,140 @@ body{background:var(--bg);min-height:100vh}
 .info-wrap{position:relative;display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle}
 .info-icon{width:16px;height:16px;border-radius:50%;background:#E8E8E8;color:#888;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:default;font-style:italic}
 .info-tooltip{display:none;position:absolute;left:22px;top:50%;transform:translateY(-50%);background:#1A1A1A;color:#F0F0F0;font-size:10px;line-height:1.8;padding:10px 14px;border-radius:10px;width:280px;box-shadow:0 6px 20px rgba(0,0,0,0.18);z-index:200;pointer-events:none}
-.info-tooltip::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);border
+.info-tooltip::before{content:'';position:absolute;left:-5px;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#1A1A1A;border-left:0}
+.info-wrap:hover .info-tooltip{display:block}
+.ctit-row{display:flex;align-items:center;margin-bottom:2px}
+.pg{display:none}.pg.on{display:flex;flex-direction:column;gap:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sb">
+    <div class="sb-logo">S</div>
+    <button class="nb on" onclick="sw(1)" id="n1" title="실적 대시보드">📊</button>
+    <button class="nb" onclick="sw(2)" id="n2" title="부정후기 추이">💬</button>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="ptit">SIDIZ 네이버 실적 대시보드</div>
+        <div class="page-sub" id="last-updated">데이터 불러오는 중...</div>
+      </div>
+      <div class="hbtns">
+        <button class="hbtn" onclick="fetchAll()" title="새로고침">↺</button>
+        <a class="hbtn" href="https://docs.google.com/spreadsheets/d/1UyoOkvJMY8kTLAZzjw6PoYw6J_YWrfakcP9iEvCUrQs" target="_blank" title="원본 시트" style="font-size:10px">↗</a>
+      </div>
+    </div>
+    <div class="pg on" id="p1">
+      <div class="content">
+        <div class="fblock">
+          <div class="frow"><span class="flbl">연도</span><div id="yr1" style="display:flex;gap:4px"></div></div>
+          <div class="frow"><span class="flbl">월</span><div id="mo1" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
+        </div>
+        <div class="kgrid" id="k1top"></div>
+        <div class="kgrid" id="k1bot"></div>
+        <div class="cgridd">
+          <div class="cc donut-cc">
+            <div><div class="ctit">연 목표 달성율</div><div class="csub" id="dsub">-</div></div>
+            <div class="donut-mid">
+              <svg width="150" height="150" viewBox="0 0 150 150" style="overflow:visible">
+                <circle cx="75" cy="75" r="55" fill="none" stroke="#DCDCDC" stroke-width="11"/>
+                <circle id="darc" cx="75" cy="75" r="55" fill="none" stroke="#FFD66B" stroke-width="11" stroke-dasharray="345.4" stroke-dashoffset="345.4" stroke-linecap="round" transform="rotate(-90 75 75)"/>
+                <text id="dpct" x="75" y="70" text-anchor="middle" dominant-baseline="middle" font-size="19" font-weight="700" fill="#111">-</text>
+                <text x="75" y="87" text-anchor="middle" font-size="9" fill="#AAA">Achieved</text>
+              </svg>
+            </div>
+            <div class="dinfo"><div class="drow"><span>YTD 실적</span><span id="dytd">-</span></div><div class="drow"><span>연간 총 목표</span><span id="dtgt">-</span></div></div>
+          </div>
+          <div class="cc">
+            <div class="ctit">월별 실적 vs 목표 달성</div>
+            <div style="position:relative;height:155px"><canvas id="c1"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pg" id="p2">
+       <div class="content"><div id="k2top" class="kgrid"></div><div id="k2bot" class="kgrid"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 사용자 주소와 설정 적용
+const API='https://script.google.com/macros/s/AKfycbznkgGbPy4HRNXpx73yMzmZlbQScriTcHjWKo5j9pxdCkMCu6X1F8ABIz0tuKT-N_4OUA/exec';
+const GID1='543240057', GID2='1006983265';
+let raw1=[], raw2=[], selYear=2026, selMonth=null, charts={};
+
+const toN=v=>{if(v===null||v===undefined||v==='')return 0;const n=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(n)?0:n;};
+const toRate=v=>{const n=toN(v);return Math.abs(n)>10?n:n*100;};
+const f억=v=>((toN(v)/1e8).toFixed(1)+'억');
+const fNum=v=>toN(v).toLocaleString();
+
+async function fetchAll(){
+  console.log("1. 데이터 로드 시작...");
+  document.getElementById('last-updated').textContent='데이터 불러오는 중...';
+  try {
+    const [j1, j2] = await Promise.all([
+      fetch(API + "?gid=" + GID1).then(r => r.json()),
+      fetch(API + "?gid=" + GID2).then(r => r.json())
+    ]);
+    console.log("2. 데이터 수신 완료", {j1, j2});
+    
+    raw1 = j1.data || []; raw2 = j2.data || [];
+    document.getElementById('last-updated').textContent = '최근 업데이트: ' + new Date().toLocaleTimeString();
+    
+    render();
+    console.log("3. 렌더링 완료");
+  } catch (e) {
+    console.error("❌ 에러 발생:", e);
+    document.getElementById('last-updated').textContent = '로드 실패 (콘솔 확인)';
+  }
+}
+
+function parseTab1(){
+  return raw1.map(r => {
+    const d = String(r['날짜'] || '');
+    const p = d.split('/');
+    return { 
+      year: parseInt(p[0]), month: parseInt(p[1]),
+      ERP: toN(r['ERP 매출']), target: toN(r['매출 목표']),
+      achieve: toRate(r['매출 달성율 (ERP 기준)'])
+    };
+  }).filter(r => !isNaN(r.year));
+}
+
+function render(){
+  const p1 = parseTab1();
+  const yrs = [...new Set(p1.map(r => r.year))].sort();
+  const yrEl = document.getElementById('yr1');
+  yrEl.innerHTML = '';
+  yrs.forEach(y => {
+    const b = document.createElement('button');
+    b.className = 'fp' + (selYear === y ? ' on' : '');
+    b.textContent = y + '년';
+    b.onclick = () => { selYear = y; render(); };
+    yrEl.appendChild(b);
+  });
+  
+  const cur = p1.filter(r => r.year === selYear);
+  const ytdERP = cur.reduce((s, r) => s + r.ERP, 0);
+  const ytdTgt = cur.reduce((s, r) => s + r.target, 0);
+  
+  document.getElementById('dytd').textContent = f억(ytdERP);
+  document.getElementById('dtgt').textContent = f억(ytdTgt);
+  const ach = ytdTgt > 0 ? (ytdERP / ytdTgt * 100) : 0;
+  document.getElementById('dpct').textContent = ach.toFixed(1) + '%';
+  document.getElementById('darc').style.strokeDashoffset = 345.4 * (1 - Math.min(ach, 100) / 100);
+}
+
+function sw(t){
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.getElementById('p' + t).classList.add('on');
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  document.getElementById('n' + t).classList.add('on');
+}
+
+window.onload = fetchAll;
+</script>
+</body>
+</html>
