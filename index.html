@@ -295,22 +295,33 @@ const bO={responsive:true,maintainAspectRatio:false,
 function mkC(id,cfg){if(charts[id]){charts[id].destroy();delete charts[id];}const el=document.getElementById(id);if(!el)return;charts[id]=new Chart(el,cfg);}
 
 async function fetchAll(){
+  console.log("1. 데이터 로드 시작...");
   document.getElementById('last-updated').textContent='데이터 불러오는 중...';
   try{
     const [j1,j2]=await Promise.all([
       fetch(`${API}?gid=${GID1}`).then(r=>r.json()),
       fetch(`${API}?gid=${GID2}`).then(r=>r.json()),
     ]);
+    console.log("2. 데이터 수신 완료:", {j1, j2});
+    
     raw1=j1.data||[];raw2=j2.data||[];
     document.getElementById('last-updated').textContent='Last updated: '+new Date().toLocaleDateString('ko-KR');
+    
     const p1=parseTab1();
+    console.log("3. 실적 데이터 파싱 완료:", p1.length, "건");
+    
     const yrs=[...new Set(p1.filter(r=>r.ERP>0).map(r=>r.year))].sort();
+    console.log("4. 사용 가능한 연도:", yrs);
+    
     if(yrs.length) selYear=Math.max(...yrs);
     selMonth=null;
+    
+    console.log("5. 렌더링 시작 - 선택된 연도:", selYear);
     render();
+    console.log("6. 모든 공정 완료!");
   }catch(e){
-    document.getElementById('last-updated').textContent='로드 실패 — 새로고침 버튼을 눌러주세요';
-    console.error(e);
+    console.error("❌ 에러 발생 단계:", e);
+    document.getElementById('last-updated').textContent='로드 실패 — 콘솔을 확인하세요';
   }
 }
 
