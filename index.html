@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SIDIZ 네이버 대시보드 (최종 완성본)</title>
+<title>SIDIZ 네이버 대시보드</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -18,12 +19,14 @@ body,*{font-family:'Inter','Apple SD Gothic Neo',sans-serif}
 }
 body{background:var(--bg);min-height:100vh}
 .wrap{display:flex;min-height:100vh}
-.sb{width:54px;background:#fff;border-right:1px solid #EBEBEB;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb{width:60px;background:#fff;border-right:1px solid #EBEBEB;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:2px;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
 .sb-logo{width:30px;height:30px;background:var(--y);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:12px;box-shadow:0 2px 8px rgba(255,214,107,0.4)}
-.nb{display:flex;align-items:center;justify-content:center;width:100%;padding:10px 0;border:none;background:none;cursor:pointer;color:#CCC;position:relative;font-size:18px;transition:color .15s}
+.nb{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:10px 4px 8px;border:none;background:none;cursor:pointer;color:#CCC;position:relative;transition:color .15s;gap:3px}
+.nb-icon{font-size:15px}
+.nb-txt{font-size:8px;font-weight:600;letter-spacing:-.2px;line-height:1.3;text-align:center}
 .nb.on{color:var(--dark)}
-.nb.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:22px;background:var(--y);border-radius:0 3px 3px 0}
-.main{flex:1;margin-left:54px;overflow-y:auto}
+.nb.on::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:28px;background:var(--y);border-radius:0 3px 3px 0}
+.main{flex:1;margin-left:60px;overflow-y:auto}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#fff;border-bottom:1px solid #F0F0F0;position:sticky;top:0;z-index:50}
 .page-title{font-size:14px;font-weight:700;color:var(--dark);letter-spacing:-.3px}
 .page-sub{font-size:10px;color:var(--g2);margin-top:1px}
@@ -36,15 +39,15 @@ body{background:var(--bg);min-height:100vh}
 .fp{padding:4px 13px;border-radius:99px;font-size:11px;font-weight:500;border:none;background:var(--g4);color:var(--g2);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
 .fp.on{background:var(--dark);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.18);font-weight:600}
 .fp.yon{background:var(--y);color:var(--dark);font-weight:700;box-shadow:0 2px 10px rgba(255,214,107,0.4)}
-.fp:disabled{color:#D8D8D8;cursor:default;background:transparent}
 .kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.kgrid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .kc{background:#fff;border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);border:1px solid #F5F5F5;position:relative;overflow:hidden;transition:transform .15s}
 .kc:hover{transform:translateY(-1px);box-shadow:var(--sh2)}
 .kc.hl::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;background:radial-gradient(circle at top right,rgba(255,214,107,0.18),transparent 70%);pointer-events:none}
 .k-lbl{font-size:10px;color:var(--g2);margin-bottom:7px}
 .k-val{font-size:24px;font-weight:300;color:var(--dark);letter-spacing:-1px;line-height:1;margin-bottom:6px}
 .k-val .u{font-size:13px;font-weight:400;margin-left:1px}
-.k-sub{font-size:10px;font-weight:500}
+.k-sub{font-size:10px;font-weight:500;color:var(--g2)}
 .rd{color:var(--rd)}.gn{color:var(--gn)}.go{color:var(--go)}.gy{color:var(--g2)}
 .cgrid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .cgridd{display:grid;grid-template-columns:175px 1fr;gap:11px}
@@ -55,7 +58,6 @@ body{background:var(--bg);min-height:100vh}
 .li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--g2)}
 .lr{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .ll{width:12px;height:2px;border-radius:1px;flex-shrink:0}
-.ld{width:12px;border-top:2px dashed #C8C8C8;flex-shrink:0;display:inline-block}
 .donut-cc{display:flex;flex-direction:column;justify-content:space-between}
 .donut-mid{display:flex;align-items:center;justify-content:center;flex:1;padding:8px 0}
 .dinfo{border-top:1px solid #F0F0F0;padding-top:8px;margin-top:4px}
@@ -65,24 +67,23 @@ body{background:var(--bg);min-height:100vh}
 .blbl{font-size:10px;color:var(--g2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btrack{flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden}
 .bfill{height:100%;border-radius:99px}
-.bval{font-size:10px;font-weight:600;color:var(--dark);width:22px;text-align:right}
+.bval{font-size:10px;font-weight:600;color:var(--dark);width:28px;text-align:right}
 .ddwrap{position:relative;margin-bottom:10px}
 .ddbtn{width:100%;padding:7px 12px;border-radius:10px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:11px;color:var(--dark);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between}
-.ddlist{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:180px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
+.ddlist{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
 .ddlist.open{display:block}
 .dditem{padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark)}
 .dditem:hover{background:#F8F8F8}
 .dditem input{accent-color:var(--dark)}
-.top3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.top3-card{background:#FAFAFA;border-radius:12px;padding:14px 16px;border:1px solid #F0F0F0}
-.top3-rank{display:flex;align-items:center;gap:6px;margin-bottom:10px}
-.top3-rank-num{width:22px;height:22px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.top3-score{font-size:22px;font-weight:300;color:var(--dark);letter-spacing:-1px;margin-bottom:4px}
-.top3-score .u{font-size:12px;font-weight:400}
-.top3-badge{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:8px}
-.top3-content{font-size:11px;color:#333;line-height:1.65;margin-bottom:8px;word-break:keep-all}
-.top3-meta{font-size:10px;color:var(--g2)}
-.top3-prod{font-size:10px;color:var(--g2);margin-top:2px}
+.top5-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.topN-card{background:#FAFAFA;border-radius:12px;padding:14px 16px;border:1px solid #F0F0F0}
+.topN-rank{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.topN-num{width:22px;height:22px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.topN-score{font-size:22px;font-weight:300;color:var(--dark);letter-spacing:-1px;margin-bottom:4px}
+.topN-score .u{font-size:12px;font-weight:400}
+.topN-badge{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;margin-bottom:8px}
+.topN-content{font-size:11px;color:#333;line-height:1.65;margin-bottom:8px;word-break:keep-all}
+.topN-meta{font-size:10px;color:var(--g2)}
 .rv-table{width:100%;border-collapse:collapse}
 .rv-table thead th{font-size:10px;font-weight:600;color:var(--g2);padding:6px 10px;border-bottom:1px solid #F0F0F0;text-align:left;background:#FAFAFA}
 .rv-table tbody tr{border-bottom:1px solid #F8F8F8}
@@ -96,14 +97,35 @@ body{background:var(--bg);min-height:100vh}
 .info-wrap:hover .info-tooltip{display:block}
 .ctit-row{display:flex;align-items:center;margin-bottom:2px}
 .pg{display:none}.pg.on{display:flex;flex-direction:column;gap:12px}
+.sec-label{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--g2);text-transform:uppercase;padding:0 2px 6px}
+/* 슬라이더 */
+.score-filter{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F8F8F8;border-radius:10px;border:1px solid #EBEBEB;flex-wrap:wrap;margin-bottom:10px}
+.score-filter label{font-size:10px;color:var(--g2);white-space:nowrap}
+.score-filter input[type=range]{accent-color:var(--dark);cursor:pointer;flex:1;min-width:80px}
+.score-num{width:44px;padding:3px 6px;border:1px solid #EBEBEB;border-radius:7px;font-size:11px;font-family:inherit;color:var(--dark);background:#fff;text-align:center}
+/* 리뷰 필터바 */
+.rv-filterbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.rv-dd{position:relative}
+.rv-dd-btn{padding:5px 10px;border-radius:8px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:10px;color:var(--dark);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.rv-dd-list{position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:220px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none;min-width:160px}
+.rv-dd-list.open{display:block}
+.rv-dd-item{padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark);white-space:nowrap}
+.rv-dd-item:hover{background:#F8F8F8}
+.rv-dd-item input{accent-color:var(--dark)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="sb">
     <div class="sb-logo">S</div>
-    <button class="nb on" onclick="sw(1)" id="n1" title="실적 대시보드">📊</button>
-    <button class="nb" onclick="sw(2)" id="n2" title="부정후기 추이">💬</button>
+    <button class="nb on" onclick="sw(1)" id="n1">
+      <span class="nb-icon">📊</span>
+      <span class="nb-txt">네이버<br>실적</span>
+    </button>
+    <button class="nb" onclick="sw(2)" id="n2">
+      <span class="nb-icon">💬</span>
+      <span class="nb-txt">부정<br>리뷰</span>
+    </button>
   </div>
   <div class="main">
     <div class="topbar">
@@ -117,14 +139,23 @@ body{background:var(--bg);min-height:100vh}
       </div>
     </div>
 
+    <!-- 탭1: 네이버 실적 -->
     <div class="pg on" id="p1">
       <div class="content">
         <div class="fblock">
           <div class="frow"><span class="flbl">연도</span><div id="yr1" style="display:flex;gap:4px"></div></div>
           <div class="frow"><span class="flbl">월</span><div id="mo1" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
         </div>
-        <div class="kgrid" id="k1top"></div>
-        <div class="kgrid" id="k1bot"></div>
+
+        <div>
+          <div class="sec-label">연도 누적 KPI</div>
+          <div class="kgrid3" id="k1ytd"></div>
+        </div>
+        <div>
+          <div class="sec-label">월별 KPI</div>
+          <div class="kgrid3" id="k1mon"></div>
+        </div>
+
         <div class="cgridd">
           <div class="cc donut-cc">
             <div><div class="ctit">연 목표 달성율</div><div class="csub" id="dsub">-</div></div>
@@ -148,27 +179,26 @@ body{background:var(--bg);min-height:100vh}
             </div>
             <div class="dinfo">
               <div class="drow"><span>YTD 실적</span><span id="dytd">-</span></div>
-              <div class="drow"><span>연간 총 목표</span><span id="dtgt">-</span></div>
+              <div class="drow"><span>누적 목표</span><span id="dtgt">-</span></div>
             </div>
           </div>
           <div class="cc">
-            <div class="ctit">월별 실적 vs 목표 달성</div>
-            <div class="csub">목표(배경) + 실적(막대) + 달성율(선)</div>
+            <div class="ctit">월 실적 추이</div>
+            <div class="csub">실적(막대) + 목표(Ghost Bar)</div>
             <div class="leg">
               <div class="li"><div class="lr" style="background:#111"></div>실적</div>
-              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div>목표(배경)</div>
-              <div class="li"><div class="ld"></div>전년실적</div>
-              <div class="li"><div class="lr" style="background:#FFD66B"></div>달성율</div>
+              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div>목표(Ghost)</div>
             </div>
             <div style="position:relative;height:155px"><canvas id="c1"></canvas></div>
           </div>
         </div>
+
         <div class="cgrid2">
           <div class="cc">
             <div class="ctit">구매자수 추이</div><div class="csub" id="bsub">-</div>
             <div class="leg">
-              <div class="li"><div class="ll" style="background:#111"></div><span id="blbl1">-</span></div>
-              <div class="li"><div class="ld"></div><span id="blbl2">-</span></div>
+              <div class="li"><div class="ll" style="background:#111"></div><span id="blbl1">올해</span></div>
+              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div><span id="blbl2">전년(Ghost)</span></div>
             </div>
             <div style="position:relative;height:145px"><canvas id="c2"></canvas></div>
           </div>
@@ -181,37 +211,39 @@ body{background:var(--bg);min-height:100vh}
             <div style="position:relative;height:145px"><canvas id="c3"></canvas></div>
           </div>
         </div>
+
         <div class="cc">
-          <div class="ctit">리뷰수 추이 및 전년비</div><div class="csub" id="rsub">-</div>
+          <div class="ctit">리뷰수 추이</div><div class="csub" id="rsub">-</div>
           <div class="leg">
-            <div class="li"><div class="ll" style="background:#111"></div><span id="rlbl1">-</span></div>
-            <div class="li"><div class="ld"></div><span id="rlbl2">-</span></div>
-            <div class="li"><div class="lr" style="background:#FFD66B"></div>YoY %</div>
+            <div class="li"><div class="ll" style="background:#FFD66B"></div><span id="rlbl1">올해</span></div>
+            <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div><span id="rlbl2">전년(Ghost)</span></div>
           </div>
           <div style="position:relative;height:135px"><canvas id="c4"></canvas></div>
         </div>
       </div>
     </div>
 
+    <!-- 탭2: 부정 리뷰 -->
     <div class="pg" id="p2">
       <div class="content">
         <div class="fblock">
           <div class="frow"><span class="flbl">연도</span><div id="yr2" style="display:flex;gap:4px"></div></div>
           <div class="frow"><span class="flbl">월</span><div id="mo2" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
         </div>
+
         <div class="kgrid" id="k2top"></div>
-        <div class="kgrid" id="k2bot"></div>
+
         <div class="cgrid2">
           <div class="cc">
-            <div class="ctit">총 부정후기 추이</div><div class="csub" id="n5sub">-</div>
+            <div class="ctit">총 부정리뷰 추이</div><div class="csub" id="n5sub">-</div>
             <div class="leg">
-              <div class="li"><div class="ll" style="background:#111"></div><span id="n5l1">-</span></div>
-              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div><span id="n5l2">-</span></div>
+              <div class="li"><div class="ll" style="background:#111"></div><span id="n5l1">올해</span></div>
+              <div class="li"><div class="lr" style="background:rgba(0,0,0,0.1)"></div><span id="n5l2">전년(Ghost)</span></div>
             </div>
             <div style="position:relative;height:148px"><canvas id="c5"></canvas></div>
           </div>
           <div class="cc">
-            <div class="ctit">월별 평점별 부정후기</div><div class="csub" id="n6sub">-</div>
+            <div class="ctit">월별 평점별 부정리뷰</div><div class="csub" id="n6sub">-</div>
             <div class="leg">
               <div class="li"><div class="ll" style="background:#D93030"></div>1점</div>
               <div class="li"><div class="ll" style="background:#4A90D9"></div>2점</div>
@@ -220,46 +252,78 @@ body{background:var(--bg);min-height:100vh}
             <div style="position:relative;height:148px"><canvas id="c6"></canvas></div>
           </div>
         </div>
+
         <div class="cgrid2">
           <div class="cc">
-            <div class="ctit">카테고리별 부정후기</div><div class="csub" id="catsub">-</div>
+            <div class="ctit">카테고리별 부정리뷰</div><div class="csub" id="catsub">-</div>
             <div id="cats" style="margin-top:6px"></div>
           </div>
           <div class="cc">
-            <div class="ctit">상품별 월별 부정후기 추이</div><div class="csub">상품 선택 후 선그래프 확인</div>
+            <div class="ctit">월별 상품 부정 리뷰</div><div class="csub">제품 선택 (중복 선택 가능, 색상으로 구분)</div>
             <div class="ddwrap">
-              <button class="ddbtn" onclick="toggleDd()"><span id="ddlbl">전체 상품 선택</span><span id="ddarr">▼</span></button>
+              <button class="ddbtn" onclick="toggleDd()"><span id="ddlbl">제품 선택</span><span id="ddarr">▼</span></button>
               <div class="ddlist" id="ddlist"></div>
             </div>
             <div style="position:relative;height:120px"><canvas id="c7"></canvas></div>
           </div>
         </div>
+
         <div class="cc">
-          <div class="ctit">🔥 이번달 영향력 Top 3 부정후기</div>
+          <div class="ctit">🔥 이번달 영향력 Top 5 부정리뷰</div>
           <div class="csub" id="t3sub">-</div>
-          <div class="top3-grid" id="top3"></div>
+          <div class="top5-grid" id="top5"></div>
         </div>
+
         <div class="cc" style="margin-bottom:4px">
-          <div class="ctit-row">
-            <span class="ctit" id="rvtit">부정후기 전체 목록</span>
-            <div class="info-wrap">
-              <div class="info-icon">i</div>
-              <div class="info-tooltip">
-                <strong style="color:#FFD66B;display:block;margin-bottom:6px">영향력 점수 산정 기준</strong>
-                · 평점 (×2): 1점→+6 / 2점→+4 / 3점→+2<br>
-                · 도움수: 도움수 그대로 합산 (예: 12개→+12)<br>
-                · 관련 리뷰 있음: +5<br>
-                · 글자수: 50자↑→+5 / 30~49자→+3 / 30자 미만→+1<br>
-                <span style="color:#888;display:block;margin-top:6px">등급: 낮음(≤5) · 보통(6~10) · 높음(11~15) · 심각(16↑)</span>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div class="ctit-row">
+                <span class="ctit" id="rvtit">부정리뷰 전체 목록</span>
+                <div class="info-wrap">
+                  <div class="info-icon">i</div>
+                  <div class="info-tooltip">
+                    <strong style="color:#FFD66B;display:block;margin-bottom:6px">영향력 점수 산정 기준</strong>
+                    · 평점 (×2): 1점→+6 / 2점→+4 / 3점→+2<br>
+                    · 도움수: 도움수 그대로 합산 (예: 12개→+12)<br>
+                    · 관련 리뷰 있음: +5<br>
+                    · 글자수: 50자↑→+5 / 30~49자→+3 / 30자 미만→+1<br>
+                    <span style="color:#888;display:block;margin-top:6px">등급: 낮음(≤5) · 보통(6~10) · 높음(11~15) · 심각(16↑)</span>
+                  </div>
+                </div>
               </div>
+              <div class="csub" style="margin-bottom:0">영향력 점수 높은 순 정렬</div>
+            </div>
+            <button onclick="downloadExcel()" title="엑셀 다운로드" style="width:30px;height:30px;border-radius:9px;border:1px solid #EBEBEB;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:var(--sh);flex-shrink:0;margin-top:2px">⬇</button>
+          </div>
+
+          <!-- 영향력 슬라이더 -->
+          <div class="score-filter">
+            <label>영향력 범위</label>
+            <input type="number" id="scoreMin" class="score-num" value="0" min="0" oninput="syncSlider('min')">
+            <input type="range" id="sliderMin" min="0" max="30" value="0" oninput="syncInput('min')" style="accent-color:var(--dark);flex:1;min-width:80px">
+            <span style="font-size:10px;color:var(--g2)">~</span>
+            <input type="range" id="sliderMax" min="0" max="30" value="30" oninput="syncInput('max')" style="accent-color:var(--dark);flex:1;min-width:80px">
+            <input type="number" id="scoreMax" class="score-num" value="30" min="0" oninput="syncSlider('max')">
+          </div>
+
+          <!-- 상품 드롭다운 필터 -->
+          <div class="rv-filterbar">
+            <div class="rv-dd" id="rvProdDD">
+              <button class="rv-dd-btn" onclick="toggleRvDD(event)"><span id="rvProdLbl">전체 상품</span> <span>▼</span></button>
+              <div class="rv-dd-list" id="rvProdList"></div>
             </div>
           </div>
-          <div class="csub">영향력 점수 높은 순 정렬</div>
+
           <table class="rv-table">
             <thead><tr>
-              <th style="width:36px">순위</th><th style="width:46px">평점</th>
-              <th style="width:50px">영향력</th><th style="width:50px">등급</th>
-              <th style="width:46px">도움수</th><th>리뷰 내용</th><th style="width:90px">상품</th>
+              <th style="width:32px">#</th>
+              <th style="width:42px">평점</th>
+              <th style="width:50px">영향력</th>
+              <th style="width:50px">등급</th>
+              <th style="width:42px">도움수</th>
+              <th>리뷰 내용</th>
+              <th style="width:65px">제품명</th>
+              <th style="width:58px">카테고리</th>
             </tr></thead>
             <tbody id="rvbody"></tbody>
           </table>
@@ -270,25 +334,108 @@ body{background:var(--bg);min-height:100vh}
 </div>
 
 <script>
-// --- [핵심] 수리된 설정 및 주소 ---
+// ===== 설정 =====
 const API='https://script.google.com/macros/s/AKfycbznkgGbPy4HRNXpx73yMzmZlbQScriTcHjWKo5j9pxdCkMCu6X1F8ABIz0tuKT-N_4OUA/exec';
 const GID1='543240057', GID2='1006983265';
-const Y='#FFD66B', YD='#B8860B';
-let raw1=[], raw2=[], selYear=2026, selMonth=null, charts={};
+const Y='#FFD66B';
+const CHART_COLORS=['#4A90D9','#D93030','#1A8A5A','#A07000','#8B5CF6','#06B6D4','#F97316','#EC4899','#6366F1','#14B8A6'];
 
-// --- 숫자 파싱 로직 (수리됨) ---
+// 기본 월 = 전월
+const _now=new Date();
+const _prevM=_now.getMonth()===0?12:_now.getMonth(); // 0-indexed getMonth() → 현재월-1 = 전월
+let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
+let selC7Prods=[],selRvProds=[];
+let _curMReviews=[];
+
+// ===== 시디즈 제품 분류 (공식 카테고리 기준) =====
+// WORK      : T90, T80, T60, T60 AIR, T50, T50 AIR, T20, 리니에(LINIE), 탭스퀘어, 에가(EGA), 버튼(BUTTON), GX
+// GAMING    : GX, GC PRO
+// STUDY     : IBLE 아이블, TREVO 트레보, RINGO 링고
+// GROWING   : ATTI 아띠, MOLTI 몰티
+// LIGHT WORK: MUUVE 뮤브, LINIE 리니에, EGA 에가, BUTTON 버튼
+// LIVING DINING: PLIT 플릿, MANE 마네, OUI 위
+// SEAT BOOSTER: STEPO, PILLO, FUNGUS, OLLY
+// THE P GOODS: 멀티 스프레이, 더 프로그레시브 백
+// 중복 상품(GX→GAMING 우선, LINIE/EGA/BUTTON→WORK맥락이면WORK, 홈맥락이면LIGHT WORK)은
+// 상품명 키워드로 판단
+
+function classifyProduct(name){
+  const n=String(name||'');
+  const nl=n.toLowerCase();
+
+  // --- 모델명 추출 규칙 ---
+  // 우선순위 높은 것부터 체크
+  // SEAT BOOSTER
+  if(/stepo|스테포/i.test(n)) return {category:'SEAT BOOSTER', model:'STEPO'};
+  if(/pillo|필로/i.test(n)) return {category:'SEAT BOOSTER', model:'PILLO'};
+  if(/fungus|평기스/i.test(n)) return {category:'SEAT BOOSTER', model:'FUNGUS'};
+  if(/olly|올리/i.test(n)) return {category:'SEAT BOOSTER', model:'OLLY'};
+
+  // THE P GOODS
+  if(/프로그레시브\s*백|progressive\s*bag/i.test(n)) return {category:'THE P GOODS', model:'프로그레시브 백'};
+  if(/멀티\s*스프레이|multi\s*spray/i.test(n)) return {category:'THE P GOODS', model:'멀티 스프레이'};
+
+  // LIVING DINING
+  if(/plit|플릿/i.test(n)) return {category:'LIVING DINING', model:'PLIT'};
+  if(/mane|마네/i.test(n)) return {category:'LIVING DINING', model:'MANE'};
+  if(/\boui\b|위(?:의자|체어)/i.test(n)) return {category:'LIVING DINING', model:'OUI'};
+
+  // GAMING (GC PRO 먼저, GX는 GAMING)
+  if(/gc\s*pro|gcpro/i.test(n)) return {category:'GAMING', model:'GC PRO'};
+  if(/\bgx\b/i.test(n)) return {category:'GAMING', model:'GX'};
+
+  // GROWING
+  if(/molti|몰티/i.test(n)) return {category:'GROWING', model:'MOLTI'};
+  if(/atti|아띠/i.test(n)) return {category:'GROWING', model:'ATTI'};
+
+  // STUDY
+  if(/ible|아이블/i.test(n)) return {category:'STUDY', model:'IBLE'};
+  if(/trevo|트레보/i.test(n)) return {category:'STUDY', model:'TREVO'};
+  if(/ringo|링고/i.test(n)) return {category:'STUDY', model:'RINGO'};
+
+  // LIGHT WORK (MUUVE는 LIGHT WORK 전용)
+  if(/muuve|뮤브/i.test(n)) return {category:'LIGHT WORK', model:'MUUVE'};
+
+  // LINIE: WORK에도 있고 LIGHT WORK에도 있음 → 상품명에 '홈'/'라이트' 있으면 LIGHT WORK, 없으면 WORK
+  if(/linie|리니에/i.test(n)){
+    const cat=/홈|home|light\s*work|라이트/i.test(n)?'LIGHT WORK':'WORK';
+    return {category:cat, model:'LINIE'};
+  }
+
+  // EGA: WORK에도 있고 LIGHT WORK에도 있음
+  if(/\bega\b|에가/i.test(n)){
+    const cat=/홈|home|light\s*work|라이트/i.test(n)?'LIGHT WORK':'WORK';
+    return {category:cat, model:'EGA'};
+  }
+
+  // BUTTON: LIGHT WORK에도 있고 WORK에도 있음
+  if(/button|버튼/i.test(n)){
+    const cat=/홈|home|light\s*work|라이트/i.test(n)?'LIGHT WORK':'WORK';
+    return {category:cat, model:'BUTTON'};
+  }
+
+  // WORK: T시리즈, 탭스퀘어
+  if(/tab\s*(?:square|스퀘어|sq)/i.test(n)) return {category:'WORK', model:'탭스퀘어'};
+  if(/tab\s*(?:plus|\+|플러스)/i.test(n)) return {category:'WORK', model:'탭플러스'};
+
+  // T시리즈 (T90, T80, T60 AIR, T60, T50 AIR, T50, T20 등)
+  const tm=n.match(/\bT\s*(\d+)\s*(AIR|air|Air)?\b/);
+  if(tm){
+    const num=tm[1], air=tm[2]?` Air`:'';
+    const model=`T${num}${air}`;
+    return {category:'WORK', model};
+  }
+
+  return {category:'ETC', model:'기타'};
+}
+
+// ===== 숫자 유틸 =====
 const toN=v=>{if(v===null||v===undefined||v==='')return 0;const n=parseFloat(String(v).replace(/[,\s]/g,''));return isNaN(n)?0:n;};
 const toRate=v=>{const n=toN(v);return Math.abs(n)>10?n:n*100;};
 const f억=v=>((toN(v)/1e8).toFixed(1)+'억');
-const fPct=v=>(toRate(v).toFixed(1)+'%');
-const fWon=v=>(toN(v).toLocaleString()+'원');
 const fNum=v=>toN(v).toLocaleString();
 
-// 차트 보조 함수
-function gg(ctx,a1=0.14,a2=0.01){
-  const g=ctx.createLinearGradient(0,0,0,ctx.canvas.height);
-  g.addColorStop(0,`rgba(120,120,120,${a1})`);g.addColorStop(1,`rgba(120,120,120,${a2})`);return g;
-}
+// ===== 차트 =====
 const bO={responsive:true,maintainAspectRatio:false,
   plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(17,17,17,0.88)',titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},cornerRadius:8,padding:8}},
   scales:{x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
@@ -296,188 +443,398 @@ const bO={responsive:true,maintainAspectRatio:false,
 
 function mkC(id,cfg){if(charts[id]){charts[id].destroy();}const el=document.getElementById(id);if(el)charts[id]=new Chart(el,cfg);}
 
-// --- [핵심] 데이터 로드 로직 ---
+// 데이터 레이블 플러그인
+const labelPlugin={
+  id:'customLabel',
+  afterDatasetsDraw(chart){
+    const {ctx}=chart;
+    chart.data.datasets.forEach((ds,di)=>{
+      if(!ds._showLabel) return;
+      const meta=chart.getDatasetMeta(di);
+      meta.data.forEach((el,i)=>{
+        const v=ds.data[i];
+        if(v===null||v===undefined||v===0) return;
+        const pos=el.tooltipPosition();
+        ctx.save();
+        ctx.font='600 9px Inter';
+        ctx.fillStyle='#444';
+        ctx.textAlign='center';
+        ctx.textBaseline='bottom';
+        const txt=ds._fmt?ds._fmt(v):String(v);
+        ctx.fillText(txt,pos.x,pos.y-3);
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(labelPlugin);
+
+// ===== 데이터 로드 =====
 async function fetchAll(){
-  console.log("1. 데이터 로드 시작...");
   document.getElementById('last-updated').textContent='데이터 동기화 중...';
   try{
     const [j1,j2]=await Promise.all([
       fetch(`${API}?gid=${GID1}`).then(r=>r.json()),
       fetch(`${API}?gid=${GID2}`).then(r=>r.json()),
     ]);
-    console.log("2. 데이터 수신 성공", {j1, j2});
     raw1=j1.data||[];raw2=j2.data||[];
     document.getElementById('last-updated').textContent='Last Updated: '+new Date().toLocaleTimeString();
     render();
-    console.log("3. 렌더링 완료");
   }catch(e){
-    console.error("로드 에러:", e);
+    console.error(e);
     document.getElementById('last-updated').textContent='연결 실패 (F12 확인)';
   }
 }
 
-// --- 데이터 정제 로직 ---
+// ===== 파싱 =====
 function parseTab1(){
   return raw1.map(r=>{
-    const d=String(r['날짜']||'').trim();
-    const p=d.split('/');
-    if(!p[0] || !p[1]) return null;
-    return{year:parseInt(p[0]), month:parseInt(p[1]),
-      ERP:toN(r['ERP 매출']), target:toN(r['매출 목표']),
+    const d=String(r['날짜']||'').trim(), p=d.split('/');
+    if(!p[0]||!p[1]) return null;
+    return{year:parseInt(p[0]),month:parseInt(p[1]),
+      ERP:toN(r['ERP 매출']),target:toN(r['매출 목표']),
       achieve:toRate(r['매출 달성율 (ERP 기준)']),
-      buyers:toN(r['구매자수(명)']), refundAmt:toN(r['환불금액']),
-      payment:toN(r['결제금액(원)']), refundCnt:toN(r['환불건']),
-      reviews:toN(r['리뷰수']), aov:toN(r['객단가(원) *ERP 매출 기준']),
-      refRate:toRate(r['환불비율(금액)']), reviewYoy:toRate(r['리뷰수 전년비'])
+      buyers:toN(r['구매자수(명)']),refundAmt:toN(r['환불금액']),
+      refundCnt:toN(r['환불건']),reviews:toN(r['리뷰수']),
     };
   }).filter(Boolean);
 }
 
 function parseTab2(){
   return raw2.map(r=>{
-    const d=String(r['리뷰등록일']||'').trim();
-    const p=d.split('-');
-    if(!p[0] || !p[1]) return null;
+    const d=String(r['리뷰등록일']||'').trim(), p=d.split('-');
+    if(!p[0]||!p[1]) return null;
     const rating=parseInt(r['구매자 평점'])||0;
     const content=String(r['리뷰상세내용']||'');
     const help=parseInt(r['리뷰도움수'])||0;
     const score=calcScore(rating,help,!!r['관련리뷰글번호'],content.length);
+    const prodName=String(r['상품명']||'');
+    const {category,model}=classifyProduct(prodName);
     return{year:parseInt(p[0]),month:parseInt(p[1]),date:d,
-      prodName:String(r['상품명']||''), rating, content, help, score, 
-      level:scoreLevel(score)};
+      prodName,rating,content,help,score,level:scoreLevel(score),category,model};
   }).filter(Boolean);
 }
 
 function calcScore(r,h,rel,len){return ({1:3,2:2,3:1}[r]||0)*2+h+(rel?5:0)+(len>=50?5:len>=30?3:1);}
 function scoreLevel(s){
-  if(s<=5) return {lv:'낮음',color:'#999',bg:'#F5F5F5'};
-  if(s<=10) return {lv:'보통',color:'#A07000',bg:'#FFF8E0'};
-  if(s<=15) return {lv:'높음',color:'#C47000',bg:'#FFF0D0'};
-  return {lv:'심각',color:'#D93030',bg:'#FFF0F0'};
+  if(s<=5) return{lv:'낮음',color:'#999',bg:'#F5F5F5'};
+  if(s<=10) return{lv:'보통',color:'#A07000',bg:'#FFF8E0'};
+  if(s<=15) return{lv:'높음',color:'#C47000',bg:'#FFF0D0'};
+  return{lv:'심각',color:'#D93030',bg:'#FFF0F0'};
 }
 
-// --- 화면 그리기 ---
+// ===== 렌더 =====
 function render(){
   const p1=parseTab1(), p2=parseTab2();
-  
-  // 필터 생성
-  const yrs=[...new Set([...p1.map(r=>r.year), ...p2.map(r=>r.year)])].filter(y=>y>=2025).sort();
-  if(!yrs.includes(selYear) && yrs.length) selYear=Math.max(...yrs);
+  const yrs=[...new Set([...p1.map(r=>r.year),...p2.map(r=>r.year)])].filter(y=>y>=2025).sort();
+  if(!yrs.includes(selYear)&&yrs.length) selYear=Math.max(...yrs);
 
   [1,2].forEach(t=>{
-    const yrEl=document.getElementById(`yr${t}`); if(!yrEl) return;
-    yrEl.innerHTML='';
-    yrs.forEach(y=>{
-      const b=document.createElement('button');
-      b.className='fp'+(selYear===y?' on':'');
-      b.textContent=y+'년';
-      b.onclick=()=>{selYear=y; render();};
-      yrEl.appendChild(b);
-    });
-    
-    const moEl=document.getElementById(`mo${t}`); if(!moEl) return;
-    moEl.innerHTML='';
-    const activeM = selMonth || 1;
-    for(let m=1; m<=12; m++){
-      const b=document.createElement('button');
-      b.className='fp'+(selMonth===m?' yon':'');
-      b.textContent=m+'월';
-      b.onclick=()=>{selMonth=(selMonth===m?null:m); render();};
-      moEl.appendChild(b);
-    }
+    const ye=document.getElementById(`yr${t}`); if(!ye) return;
+    ye.innerHTML='';
+    yrs.forEach(y=>{const b=document.createElement('button');b.className='fp'+(selYear===y?' on':'');b.textContent=y+'년';b.onclick=()=>{selYear=y;render();};ye.appendChild(b);});
+    const me=document.getElementById(`mo${t}`); if(!me) return;
+    me.innerHTML='';
+    for(let m=1;m<=12;m++){const b=document.createElement('button');b.className='fp'+(selMonth===m?' yon':'');b.textContent=m+'월';b.onclick=()=>{selMonth=(selMonth===m?null:m);render();};me.appendChild(b);}
   });
 
   renderTab1(p1);
-  renderTab2(p2, p1);
+  renderTab2(p2,p1);
 }
 
+// ===== 탭1 =====
 function renderTab1(p1){
   const cur=p1.filter(r=>r.year===selYear);
+  const prev=p1.filter(r=>r.year===selYear-1);
   const curR=cur.filter(r=>r.ERP>0);
-  const activeM=selMonth || (curR.length?Math.max(...curR.map(r=>r.month)):1);
-  const curMD=curR.find(r=>r.month===activeM);
+  const activeM=selMonth||(curR.length?Math.max(...curR.map(r=>r.month)):1);
 
-  const ytdERP=curR.reduce((s,r)=>s+r.ERP,0);
-  const ytdTarget=cur.reduce((s,r)=>s+r.target,0);
-  const ytdAch=ytdTarget>0?(ytdERP/ytdTarget)*100:0;
+  // YTD ~ activeM 누적
+  const ytdERP=curR.filter(r=>r.month<=activeM).reduce((s,r)=>s+r.ERP,0);
+  const ytdTgt=cur.filter(r=>r.month<=activeM).reduce((s,r)=>s+r.target,0);
+  const ytdAch=ytdTgt>0?(ytdERP/ytdTgt)*100:0;
 
-  const kc=(l,v,s)=>`<div class="kc"><div class="k-lbl">${l}</div><div class="k-val">${v}</div><div class="k-sub">${s}</div></div>`;
-  document.getElementById('k1top').innerHTML=
-    kc('YTD 누적 ERP 매출',f억(ytdERP),`올해 누적`)+
-    kc('YTD 평균 달성율',ytdAch.toFixed(1)+'%',`전체 목표 대비`)+
-    kc(`${activeM}월 매출`,f억(curMD?.ERP),`해당 월 실적`)+
-    kc(`${activeM}월 달성율`,(curMD?.achieve||0).toFixed(1)+'%',`월간 목표 대비`);
+  const kc=(l,v,s,hl='')=>`<div class="kc${hl}"><div class="k-lbl">${l}</div><div class="k-val">${v}</div><div class="k-sub">${s}</div></div>`;
 
-  // 도넛 차트
+  // 연도 KPI
+  document.getElementById('k1ytd').innerHTML=
+    kc(`연 누적 목표 (~${activeM}월)`,f억(ytdTgt),`${selYear}년 ${activeM}월까지`)+
+    kc(`연 누적 매출 (~${activeM}월)`,f억(ytdERP),'ERP 기준')+
+    kc('연 누적 달성율',ytdAch.toFixed(1)+'%','누적 목표 대비',' hl');
+
+  // 월 KPI
+  const mRow=cur.find(r=>r.month===activeM);
+  const mERP=mRow?.ERP||0, mTgt=mRow?.target||0;
+  const mAch=mTgt>0?(mERP/mTgt)*100:(mRow?.achieve||0);
+  document.getElementById('k1mon').innerHTML=
+    kc(`${activeM}월 목표`,f억(mTgt),'월 목표')+
+    kc(`${activeM}월 매출`,f억(mERP),'ERP 기준')+
+    kc(`${activeM}월 달성율`,mAch.toFixed(1)+'%','월 목표 대비',' hl');
+
+  // 도넛
   document.getElementById('dpct').textContent=ytdAch.toFixed(1)+'%';
   document.getElementById('darc').style.strokeDashoffset=345.4*(1-Math.min(ytdAch,100)/100);
   document.getElementById('dytd').textContent=f억(ytdERP);
-  document.getElementById('dtgt').textContent=f억(ytdTarget);
-  document.getElementById('dsub').textContent=selYear+'년';
+  document.getElementById('dtgt').textContent=f억(ytdTgt);
+  document.getElementById('dsub').textContent=`${selYear}년 ~${activeM}월 누적`;
 
-  // 메인 차트 c1
-  const ml=Array.from({length:12},(_,i)=> (i+1)+'월');
+  const ml=Array.from({length:12},(_,i)=>(i+1)+'월');
+
+  // c1: Ghost bar 목표 + 실적 (값 표시)
+  const erpD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.ERP||null);
+  const tgtD=ml.map((_,i)=>cur.find(x=>x.month===i+1)?.target||null);
   mkC('c1',{type:'bar',data:{labels:ml,datasets:[
-    {label:'실적',data:ml.map((_,i)=>curR.find(x=>x.month===i+1)?.ERP||null),backgroundColor:'#111',borderRadius:5},
-    {label:'목표',data:ml.map((_,i)=>cur.find(x=>x.month===i+1)?.target||null),type:'line',borderColor:'#FFD66B',borderWidth:2,fill:false}
-  ]},options:bO});
-  
-  // 구매자수 c2
-  mkC('c2',{type:'line',data:{labels:ml,datasets:[
-    {data:ml.map((_,i)=>curR.find(x=>x.month===i+1)?.buyers||null),borderColor:'#111',tension:0.4}
-  ]},options:bO});
+    {label:'목표(Ghost)',data:tgtD,backgroundColor:'rgba(180,180,180,0.18)',borderRadius:6,barPercentage:0.75,categoryPercentage:0.8,order:2},
+    {label:'실적',data:erpD,backgroundColor:'#111',borderRadius:5,barPercentage:0.5,categoryPercentage:0.8,order:1,_showLabel:true,_fmt:v=>v?f억(v):''},
+  ]},options:{...bO}});
 
-  // 환불 c3
+  // c2: Ghost bar 전년 구매자수 + 올해 선
+  const buyD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.buyers||null);
+  const prevBuy=ml.map((_,i)=>prev.find(x=>x.month===i+1)?.buyers||null);
+  document.getElementById('bsub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
+  document.getElementById('blbl1').textContent=`${selYear}년`;
+  document.getElementById('blbl2').textContent=`${selYear-1}년(Ghost)`;
+  mkC('c2',{type:'bar',data:{labels:ml,datasets:[
+    {label:`${selYear-1}년`,data:prevBuy,backgroundColor:'rgba(180,180,180,0.18)',borderRadius:6,barPercentage:0.75,order:2},
+    {label:`${selYear}년`,data:buyD,type:'line',borderColor:'#111',tension:0.4,pointRadius:3,pointBackgroundColor:'#111',order:1,_showLabel:true,_fmt:v=>v?fNum(v):''},
+  ]},options:{...bO}});
+
+  // c3: 환불금액(막대) + 환불건수(선, 보조축)
+  const refAmtD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.refundAmt||null);
+  const refCntD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.refundCnt||null);
   mkC('c3',{type:'bar',data:{labels:ml,datasets:[
-    {label:'금액',data:ml.map((_,i)=>curR.find(x=>x.month===i+1)?.refundAmt||null),backgroundColor:'#D0D0D0',borderRadius:4}
-  ]},options:bO});
+    {label:'환불금액',data:refAmtD,backgroundColor:'#D0D0D0',borderRadius:4,yAxisID:'y',_showLabel:true,_fmt:v=>v?f억(v):''},
+    {label:'환불건수',data:refCntD,type:'line',borderColor:'#111',yAxisID:'y2',tension:0.4,pointRadius:3,pointBackgroundColor:'#111',_showLabel:true,_fmt:v=>v?v+'건':''},
+  ]},options:{...bO,scales:{
+    x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+    y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false},position:'left'},
+    y2:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false},position:'right'},
+  }}});
 
-  // 리뷰 c4
-  mkC('c4',{type:'line',data:{labels:ml,datasets:[
-    {data:ml.map((_,i)=>curR.find(x=>x.month===i+1)?.reviews||null),borderColor:Y}
-  ]},options:bO});
+  // c4: Ghost bar 전년 리뷰수 + 올해 선
+  const rvD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.reviews||null);
+  const prevRv=ml.map((_,i)=>prev.find(x=>x.month===i+1)?.reviews||null);
+  document.getElementById('rsub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
+  document.getElementById('rlbl1').textContent=`${selYear}년`;
+  document.getElementById('rlbl2').textContent=`${selYear-1}년(Ghost)`;
+  mkC('c4',{type:'bar',data:{labels:ml,datasets:[
+    {label:`${selYear-1}년`,data:prevRv,backgroundColor:'rgba(180,180,180,0.18)',borderRadius:6,barPercentage:0.75,order:2},
+    {label:`${selYear}년`,data:rvD,type:'line',borderColor:Y,tension:0.4,pointRadius:3,pointBackgroundColor:Y,order:1,_showLabel:true,_fmt:v=>v?fNum(v):''},
+  ]},options:{...bO}});
 }
 
-function renderTab2(p2, p1){
-  const cur=p2.filter(r=>r.year===selYear);
-  const activeM=selMonth || (cur.length?Math.max(...cur.map(r=>r.month)):1);
+// ===== 탭2 =====
+function renderTab2(p2,p1){
+  // 3점 이하 = 부정
+  const neg=p2.filter(r=>r.rating<=3);
+  const cur=neg.filter(r=>r.year===selYear);
+  const prev=neg.filter(r=>r.year===selYear-1);
+  const activeM=selMonth||(cur.length?Math.max(...cur.map(r=>r.month)):1);
   const curM=cur.filter(r=>r.month===activeM);
 
+  // 탭1에서 리뷰수 참조
+  const ytdReviews=p1.filter(r=>r.year===selYear&&r.month<=activeM).reduce((s,r)=>s+r.reviews,0);
+  const monReviews=p1.find(r=>r.year===selYear&&r.month===activeM)?.reviews||0;
+
+  // KPI
   const kc=(l,v,s)=>`<div class="kc"><div class="k-lbl">${l}</div><div class="k-val">${v}</div><div class="k-sub">${s}</div></div>`;
   document.getElementById('k2top').innerHTML=
-    kc(`${selYear}년 누적 부정후기`,fNum(cur.length)+'건',`누적 데이터`)+
-    kc(`${activeM}월 부정후기`,fNum(curM.length)+'건',`해당 월 발생`);
+    kc('연 누적 리뷰수',fNum(ytdReviews)+'건',`${selYear}년 ~${activeM}월`)+
+    kc('연 누적 부정리뷰',fNum(cur.filter(r=>r.month<=activeM).length)+'건','3점 이하')+
+    kc(`${activeM}월 리뷰수`,fNum(monReviews)+'건','해당 월 전체')+
+    kc(`${activeM}월 부정리뷰`,fNum(curM.length)+'건','3점 이하');
 
-  // 부정후기 추이 c5
-  const ml=Array.from({length:12},(_,i)=> (i+1)+'월');
-  mkC('c5',{type:'line',data:{labels:ml,datasets:[
-    {data:ml.map((_,i)=>cur.filter(r=>r.month===i+1).length||null),borderColor:'#111',tension:0.4}
-  ]},options:bO});
+  const ml=Array.from({length:12},(_,i)=>(i+1)+'월');
 
-  // 평점별 c6
+  // c5: 부정리뷰 추이 Ghost
+  const negD=ml.map((_,i)=>cur.filter(r=>r.month===i+1).length||null);
+  const prevNeg=ml.map((_,i)=>prev.filter(r=>r.month===i+1).length||null);
+  document.getElementById('n5sub').textContent=`${selYear}년 / ${selYear-1}년`;
+  mkC('c5',{type:'bar',data:{labels:ml,datasets:[
+    {label:`${selYear-1}년`,data:prevNeg,backgroundColor:'rgba(180,180,180,0.18)',borderRadius:5,barPercentage:0.75,order:2},
+    {label:`${selYear}년`,data:negD,type:'line',borderColor:'#111',tension:0.4,pointRadius:3,pointBackgroundColor:'#111',order:1},
+  ]},options:{...bO}});
+
+  // c6: 평점별
   mkC('c6',{type:'line',data:{labels:ml,datasets:[
-    {label:'1점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===1).length||null),borderColor:'#D93030'},
-    {label:'2점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===2).length||null),borderColor:'#4A90D9'}
-  ]},options:bO});
+    {label:'1점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===1).length||null),borderColor:'#D93030',tension:0.4,pointRadius:3},
+    {label:'2점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===2).length||null),borderColor:'#4A90D9',tension:0.4,pointRadius:3},
+    {label:'3점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===3).length||null),borderColor:'#BBB',tension:0.4,pointRadius:3},
+  ]},options:{...bO,plugins:{...bO.plugins,legend:{display:true,labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:8}}}}});
 
-  // 카테고리
-  const cats={}; cur.forEach(r=>{const c=r.prodName.slice(0,5); cats[c]=(cats[c]||0)+1;});
-  const catArr=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById('cats').innerHTML=catArr.map(([l,v])=>`<div class="brow"><div class="blbl" style="width:70px">${l}</div><div class="btrack"><div class="bfill" style="width:${(v/cur.length*100)}%;background:#111"></div></div><div class="bval">${v}</div></div>`).join('');
+  // 카테고리별
+  const cats={};
+  cur.forEach(r=>{cats[r.category]=(cats[r.category]||0)+1;});
+  const total=cur.length||1;
+  const catArr=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('catsub').textContent=`${selYear}년 누적 (3점 이하)`;
+  document.getElementById('cats').innerHTML=catArr.map(([l,v])=>
+    `<div class="brow"><div class="blbl" style="width:58px">${l}</div><div class="btrack"><div class="bfill" style="width:${(v/total*100).toFixed(0)}%;background:#111"></div></div><div class="bval">${v}</div></div>`
+  ).join('');
 
-  // 리뷰 목록
-  const sorted=curM.sort((a,b)=>b.score-a.score);
-  document.getElementById('rvbody').innerHTML=sorted.map((r,i)=>{
+  // c7: 상품별 월별 부정리뷰 (중복선택)
+  const models=[...new Set(cur.map(r=>r.model))].sort();
+  if(selC7Prods.length===0) selC7Prods=models.slice(0,Math.min(3,models.length));
+  buildDd7(models, cur, ml);
+
+  // Top5
+  const sorted5=curM.slice().sort((a,b)=>b.score-a.score).slice(0,5);
+  document.getElementById('t3sub').textContent=`${selYear}년 ${activeM}월`;
+  const rankColors=['#111','#444','#666','#999','#BBB'];
+  document.getElementById('top5').innerHTML=sorted5.map((r,i)=>{
     const sl=r.level;
-    return `<tr><td>${i+1}</td><td>${r.rating}점</td><td>${r.score}</td><td><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${sl.lv}</span></td><td>${r.help}</td><td>${r.content}</td><td>${r.prodName.slice(0,10)}</td></tr>`;
+    return `<div class="topN-card">
+      <div class="topN-rank"><div class="topN-num" style="background:${rankColors[i]}">${i+1}</div><span style="font-size:10px;color:#888">${r.model}</span></div>
+      <div class="topN-score">${r.score}<span class="u">점</span></div>
+      <div class="topN-badge" style="background:${sl.bg};color:${sl.color}">${sl.lv}</div>
+      <div class="topN-content">${r.content.slice(0,60)}${r.content.length>60?'…':''}</div>
+      <div class="topN-meta">평점 ${r.rating}점 · 도움 ${r.help}개</div>
+      <div class="topN-meta">${r.category}</div>
+    </div>`;
+  }).join('');
+
+  // 리뷰 목록 상품 드롭다운
+  buildRvDD(models, curM);
+
+  // 슬라이더 범위
+  const maxSc=Math.max(...(curM.length?curM.map(r=>r.score):[10]),10);
+  ['sliderMin','sliderMax'].forEach(id=>document.getElementById(id).max=maxSc);
+  document.getElementById('sliderMax').value=maxSc;
+  document.getElementById('scoreMax').value=maxSc;
+
+  document.getElementById('rvtit').textContent=`${activeM}월 부정리뷰 전체 목록`;
+  _curMReviews=curM;
+  renderRvTable();
+}
+
+function buildDd7(models, cur, ml){
+  const dd=document.getElementById('ddlist');
+  dd.innerHTML='';
+  models.forEach(m=>{
+    const chk=selC7Prods.includes(m);
+    const item=document.createElement('div');
+    item.className='dditem';
+    item.innerHTML=`<input type="checkbox" ${chk?'checked':''}/><span>${m}</span>`;
+    item.querySelector('input').onchange=e=>{
+      if(e.target.checked){if(!selC7Prods.includes(m))selC7Prods.push(m);}
+      else selC7Prods=selC7Prods.filter(x=>x!==m);
+      document.getElementById('ddlbl').textContent=selC7Prods.length?selC7Prods.slice(0,2).join(', ')+(selC7Prods.length>2?` 외 ${selC7Prods.length-2}개`:''):'제품 선택';
+      renderC7(cur,ml);
+    };
+    dd.appendChild(item);
+  });
+  document.getElementById('ddlbl').textContent=selC7Prods.length?selC7Prods.slice(0,2).join(', ')+(selC7Prods.length>2?` 외 ${selC7Prods.length-2}개`:''):'제품 선택';
+  renderC7(cur,ml);
+}
+
+function renderC7(cur,ml){
+  const ds=selC7Prods.map((m,i)=>({
+    label:m,
+    data:ml.map((_,mi)=>cur.filter(r=>r.model===m&&r.month===mi+1).length||null),
+    borderColor:CHART_COLORS[i%CHART_COLORS.length],
+    tension:0.4,pointRadius:3,
+  }));
+  mkC('c7',{type:'line',data:{labels:ml,datasets:ds},options:{...bO,
+    plugins:{...bO.plugins,legend:{display:true,labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:6}}}}});
+}
+
+function buildRvDD(models, curM){
+  const list=document.getElementById('rvProdList');
+  list.innerHTML='';
+  const allItem=document.createElement('div');
+  allItem.className='rv-dd-item';
+  allItem.innerHTML=`<input type="checkbox" checked/><span>전체</span>`;
+  allItem.querySelector('input').onchange=e=>{
+    if(e.target.checked){selRvProds=[];document.getElementById('rvProdLbl').textContent='전체 상품';list.querySelectorAll('input').forEach(x=>x.checked=false);e.target.checked=true;}
+    renderRvTable();
+  };
+  list.appendChild(allItem);
+
+  models.forEach(m=>{
+    const item=document.createElement('div');
+    item.className='rv-dd-item';
+    item.innerHTML=`<input type="checkbox"/><span>${m}</span>`;
+    item.querySelector('input').onchange=e=>{
+      if(e.target.checked){if(!selRvProds.includes(m))selRvProds.push(m);}
+      else selRvProds=selRvProds.filter(x=>x!==m);
+      document.getElementById('rvProdLbl').textContent=selRvProds.length?selRvProds.join(', '):'전체 상품';
+      if(selRvProds.length===0) list.querySelector('input').checked=true;
+      renderRvTable();
+    };
+    list.appendChild(item);
+  });
+}
+
+function renderRvTable(){
+  const min=parseInt(document.getElementById('scoreMin').value)||0;
+  const max=parseInt(document.getElementById('scoreMax').value)||999;
+  let rows=_curMReviews.filter(r=>r.score>=min&&r.score<=max);
+  if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
+  rows=rows.slice().sort((a,b)=>b.score-a.score);
+  document.getElementById('rvbody').innerHTML=rows.map((r,i)=>{
+    const sl=r.level;
+    return `<tr>
+      <td>${i+1}</td><td>${r.rating}점</td><td>${r.score}</td>
+      <td><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${sl.lv}</span></td>
+      <td>${r.help}</td><td>${r.content}</td>
+      <td>${r.model}</td><td>${r.category}</td>
+    </tr>`;
   }).join('');
 }
 
+// 슬라이더 동기화
+function syncSlider(t){
+  const id=t==='min'?'scoreMin':'scoreMax';
+  const sid=t==='min'?'sliderMin':'sliderMax';
+  document.getElementById(sid).value=document.getElementById(id).value;
+  renderRvTable();
+}
+function syncInput(t){
+  const id=t==='min'?'scoreMin':'scoreMax';
+  const sid=t==='min'?'sliderMin':'sliderMax';
+  document.getElementById(id).value=document.getElementById(sid).value;
+  renderRvTable();
+}
+
+// 드롭다운
+let ddOpen=false, rvDdOpen=false;
+function toggleDd(){
+  ddOpen=!ddOpen;
+  document.getElementById('ddlist').classList.toggle('open',ddOpen);
+  document.getElementById('ddarr').textContent=ddOpen?'▲':'▼';
+}
+function toggleRvDD(e){
+  e.stopPropagation();
+  rvDdOpen=!rvDdOpen;
+  document.getElementById('rvProdList').classList.toggle('open',rvDdOpen);
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.ddwrap')){ddOpen=false;const d=document.getElementById('ddlist');if(d)d.classList.remove('open');const arr=document.getElementById('ddarr');if(arr)arr.textContent='▼';}
+  if(!e.target.closest('#rvProdDD')){rvDdOpen=false;const d=document.getElementById('rvProdList');if(d)d.classList.remove('open');}
+});
+
+// 엑셀 다운로드
+function downloadExcel(){
+  const min=parseInt(document.getElementById('scoreMin').value)||0;
+  const max=parseInt(document.getElementById('scoreMax').value)||999;
+  let rows=_curMReviews.filter(r=>r.score>=min&&r.score<=max);
+  if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
+  rows=rows.slice().sort((a,b)=>b.score-a.score);
+  const data=[['순위','평점','영향력','등급','도움수','리뷰내용','제품명','카테고리','등록일']];
+  rows.forEach((r,i)=>data.push([i+1,r.rating,r.score,r.level.lv,r.help,r.content,r.model,r.category,r.date]));
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb,ws,'부정리뷰');
+  XLSX.writeFile(wb,`SIDIZ_부정리뷰_${selYear}년${selMonth||'전체'}월.xlsx`);
+}
+
+// 탭 전환
 function sw(t){
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
   document.getElementById('p'+t).classList.add('on');
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('n'+t).classList.add('on');
+  document.getElementById('ptit').textContent=t===1?'SIDIZ 네이버 실적 대시보드':'SIDIZ 부정 리뷰 대시보드';
 }
 
 window.onload=fetchAll;
