@@ -57,12 +57,13 @@ body{background:var(--bg);min-height:100vh}
 .lr{width:8px;height:8px;border-radius:2px;flex-shrink:0}
 .ll{width:12px;height:2px;border-radius:1px;flex-shrink:0}
 .la{width:14px;height:8px;border-radius:2px;flex-shrink:0;opacity:.3}
+/* 도넛 - 두께 16 (기존 11 → 1.5배) */
 .donut-cc{display:flex;flex-direction:column;justify-content:space-between}
 .donut-mid{display:flex;align-items:center;justify-content:center;flex:1;padding:8px 0}
 .dinfo{border-top:1px solid #F0F0F0;padding-top:8px;margin-top:4px}
 .drow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:var(--g2)}
 .drow span:last-child{font-weight:600;color:var(--dark)}
-.brow{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.brow{display:flex;align-items:center;gap:7px;margin-bottom:5px}
 .blbl{font-size:10px;color:var(--g2);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btrack{flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden}
 .bfill{height:100%;border-radius:99px}
@@ -96,10 +97,8 @@ body{background:var(--bg);min-height:100vh}
 .ctit-row{display:flex;align-items:center;margin-bottom:2px}
 .pg{display:none}.pg.on{display:flex;flex-direction:column;gap:12px}
 .sec-label{font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--g2);text-transform:uppercase;padding:0 2px 6px}
-/* 등급 안내 박스 */
 .grade-info{font-size:10px;color:#666;background:#F8F8F8;border-radius:8px;padding:7px 12px;margin-bottom:6px;line-height:1.8;border:1px solid #EBEBEB}
 .grade-info strong{color:#333}
-/* 슬라이더 */
 .score-filter{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#F8F8F8;border-radius:10px;border:1px solid #EBEBEB;margin-bottom:10px}
 .score-filter label{font-size:10px;color:var(--g2);white-space:nowrap;flex-shrink:0}
 .score-filter input[type=range]{accent-color:var(--dark);cursor:pointer;flex:1}
@@ -112,13 +111,16 @@ body{background:var(--bg);min-height:100vh}
 .rv-dd-item:hover{background:#F8F8F8}
 .rv-dd-item input{accent-color:var(--dark)}
 .excel-btn{width:30px;height:30px;border-radius:9px;border:1px solid #EBEBEB;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);flex-shrink:0;padding:0}
+/* 올해전체보기 체크박스 */
+.full-year-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--g2);cursor:pointer;padding:4px 0}
+.full-year-wrap input{accent-color:var(--dark);cursor:pointer}
+.full-year-wrap:hover{color:var(--dark)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="sb">
     <div class="sb-logo">S</div>
-    <!-- 탭1: 네이버 N 아이콘 (녹색) -->
     <button class="nb on" onclick="sw(1)" id="n1">
       <span class="nb-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -154,22 +156,27 @@ body{background:var(--bg);min-height:100vh}
         </div>
         <div><div class="sec-label">연도 누적 KPI</div><div class="kgrid3" id="k1ytd"></div></div>
         <div><div class="sec-label">월별 KPI</div><div class="kgrid3" id="k1mon"></div></div>
+
+        <!-- 도넛 + 월실적 -->
         <div class="cgridd">
           <div class="cc donut-cc">
             <div><div class="ctit">연 목표 달성율</div><div class="csub" id="dsub">-</div></div>
             <div class="donut-mid">
+              <!-- 도넛 두께 16 (1.5배), r=52로 안쪽 공간 유지 -->
               <svg width="150" height="150" viewBox="0 0 150 150" style="overflow:visible">
                 <defs>
-                  <filter id="dsh"><feDropShadow dx="3" dy="4" stdDeviation="5" flood-color="rgba(0,0,0,0.12)"/></filter>
+                  <filter id="dsh"><feDropShadow dx="3" dy="5" stdDeviation="6" flood-color="rgba(0,0,0,0.13)"/></filter>
                   <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#FFD66B"/><stop offset="100%" stop-color="#FF8C00" stop-opacity=".85"/>
                   </linearGradient>
                 </defs>
-                <circle cx="75" cy="75" r="55" fill="none" stroke="#DCDCDC" stroke-width="11"/>
-                <circle id="darc" cx="75" cy="75" r="55" fill="none" stroke="url(#dg)" stroke-width="11"
-                  stroke-dasharray="345.4" stroke-dashoffset="345.4" stroke-linecap="round"
+                <!-- track: 두께 16 -->
+                <circle cx="75" cy="75" r="52" fill="none" stroke="#E8E8E8" stroke-width="16"/>
+                <!-- progress: 두께 16, 둘레=2π*52≈326.7 -->
+                <circle id="darc" cx="75" cy="75" r="52" fill="none" stroke="url(#dg)" stroke-width="16"
+                  stroke-dasharray="326.7" stroke-dashoffset="326.7" stroke-linecap="round"
                   transform="rotate(-90 75 75)" filter="url(#dsh)"/>
-                <text id="dpct" x="75" y="70" text-anchor="middle" dominant-baseline="middle" font-size="19" font-weight="700" fill="#111" font-family="Inter,sans-serif">-</text>
+                <text id="dpct" x="75" y="70" text-anchor="middle" dominant-baseline="middle" font-size="18" font-weight="700" fill="#111" font-family="Inter,sans-serif">-</text>
                 <text x="75" y="87" text-anchor="middle" font-size="9" fill="#AAA" font-family="Inter,sans-serif">Achieved</text>
               </svg>
             </div>
@@ -189,6 +196,18 @@ body{background:var(--bg);min-height:100vh}
             <div style="position:relative;height:155px"><canvas id="c1"></canvas></div>
           </div>
         </div>
+
+        <!-- 리뷰수 추이 (위로) -->
+        <div class="cc">
+          <div class="ctit">리뷰수 추이</div><div class="csub" id="rsub">-</div>
+          <div class="leg">
+            <div class="li"><div class="ll" style="background:#111"></div><span id="rlbl1">올해</span></div>
+            <div class="li"><div class="la" style="background:#888"></div><span id="rlbl2">전년 범위</span></div>
+          </div>
+          <div style="position:relative;height:135px"><canvas id="c4"></canvas></div>
+        </div>
+
+        <!-- 구매자수 + 환불 (아래로) -->
         <div class="cgrid2">
           <div class="cc">
             <div class="ctit">구매자수 추이</div><div class="csub" id="bsub">-</div>
@@ -199,22 +218,13 @@ body{background:var(--bg);min-height:100vh}
             <div style="position:relative;height:145px"><canvas id="c2"></canvas></div>
           </div>
           <div class="cc">
-            <div class="ctit">환불 추이</div><div class="csub">환불금액(영역) · 건수(선,좌) · 환불율%(선,우)</div>
+            <div class="ctit">환불 추이</div><div class="csub">환불금액(영역) · 환불율%(선, 커서로 상세확인)</div>
             <div class="leg">
               <div class="li"><div class="la" style="background:#AAA"></div>금액 범위</div>
-              <div class="li"><div class="ll" style="background:#111"></div>건수</div>
               <div class="li"><div class="ll" style="background:#D93030"></div>환불율%</div>
             </div>
             <div style="position:relative;height:145px"><canvas id="c3"></canvas></div>
           </div>
-        </div>
-        <div class="cc">
-          <div class="ctit">리뷰수 추이</div><div class="csub" id="rsub">-</div>
-          <div class="leg">
-            <div class="li"><div class="ll" style="background:#111"></div><span id="rlbl1">올해</span></div>
-            <div class="li"><div class="la" style="background:#888"></div><span id="rlbl2">전년 범위</span></div>
-          </div>
-          <div style="position:relative;height:135px"><canvas id="c4"></canvas></div>
         </div>
       </div>
     </div>
@@ -237,19 +247,16 @@ body{background:var(--bg);min-height:100vh}
             <div style="position:relative;height:148px"><canvas id="c5"></canvas></div>
           </div>
           <div class="cc">
-            <div class="ctit">월별 평점별 부정리뷰</div><div class="csub" id="n6sub">-</div>
-            <div class="leg">
-              <div class="li"><div class="ll" style="background:#D93030"></div>1점</div>
-              <div class="li"><div class="ll" style="background:#4A90D9"></div>2점</div>
-              <div class="li"><div class="ll" style="background:#BBB"></div>3점</div>
-            </div>
+            <!-- 제목 변경, 범례 제거 -->
+            <div class="ctit">월간 평점 부정리뷰</div><div class="csub" id="n6sub">-</div>
             <div style="position:relative;height:148px"><canvas id="c6"></canvas></div>
           </div>
         </div>
         <div class="cgrid2">
-          <div class="cc">
+          <div class="cc" style="display:flex;flex-direction:column;">
             <div class="ctit">카테고리별 부정리뷰</div><div class="csub" id="catsub">-</div>
-            <div id="cats" style="margin-top:6px"></div>
+            <!-- 카테고리 목록: flex-grow로 꽉 채움 -->
+            <div id="cats" style="flex:1;display:flex;flex-direction:column;justify-content:space-evenly"></div>
           </div>
           <div class="cc">
             <div class="ctit">월별 상품 부정 리뷰</div><div class="csub">제품 선택 (중복 가능) · 기본: 부정리뷰 TOP3</div>
@@ -285,6 +292,11 @@ body{background:var(--bg);min-height:100vh}
               <div class="csub" style="margin-bottom:0">영향력 점수 높은 순 정렬</div>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <!-- 올해 전체보기 체크박스 -->
+              <label class="full-year-wrap">
+                <input type="checkbox" id="fullYearChk" onchange="onFullYearChange()">
+                <span>올해 데이터 전체보기</span>
+              </label>
               <div class="rv-dd" id="rvProdDD">
                 <button class="rv-dd-btn" onclick="toggleRvDD(event)"><span id="rvProdLbl">상품명</span> <span>▼</span></button>
                 <div class="rv-dd-list" id="rvProdList"></div>
@@ -297,18 +309,16 @@ body{background:var(--bg);min-height:100vh}
               </button>
             </div>
           </div>
-          <!-- 등급 안내 -->
           <div class="grade-info">
             <strong>등급 기준</strong> &nbsp;낮음 ≤5점 &nbsp;·&nbsp; 보통 6~10점 &nbsp;·&nbsp; 높음 11~15점 &nbsp;·&nbsp; 심각 16점↑
             &nbsp;&nbsp;|&nbsp;&nbsp;
             <strong>점수 기준</strong> &nbsp;평점(×2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1)
           </div>
-          <!-- 단일 슬라이더 -->
           <div class="score-filter">
             <label>영향력 최솟값</label>
             <span id="scoreMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">0</span>
             <input type="range" id="sliderRange" min="0" max="30" value="0" oninput="onRangeChange()">
-            <span id="scoreMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
+            <span style="font-size:10px;color:var(--g2)">이상 표시</span>
             <input type="number" id="scoreMinInput" class="score-num" value="0" min="0" placeholder="직접입력" oninput="onMinInput()">
           </div>
           <table class="rv-table">
@@ -334,7 +344,8 @@ const CHART_COLORS=['#4A90D9','#D93030','#1A8A5A','#A07000','#8B5CF6','#06B6D4',
 const _now=new Date();
 const _prevM=_now.getMonth()===0?12:_now.getMonth();
 let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
-let selC7Prods=[],selRvProds=[],_curMReviews=[],_scoreMin=0;
+let selC7Prods=[],selRvProds=[],_curMReviews=[],_allYearReviews=[],_scoreMin=0;
+let _fullYear=false; // 올해 전체보기 상태
 
 // ===== 제품 분류 =====
 function classifyProduct(name){
@@ -372,7 +383,6 @@ const toRate=v=>{const n=toN(v);return Math.abs(n)>10?n:n*100;};
 const f억=v=>((toN(v)/1e8).toFixed(1)+'억');
 const fNum=v=>toN(v).toLocaleString();
 
-// 그라데이션 배경
 function makeGrad(ctx,r,g,b,a1=0.2,a2=0.01){
   const chart=ctx.chart,{ctx:c,chartArea}=chart;
   if(!chartArea) return `rgba(${r},${g},${b},${a1})`;
@@ -382,7 +392,6 @@ function makeGrad(ctx,r,g,b,a1=0.2,a2=0.01){
   return gr;
 }
 
-// ===== 차트 기본 옵션 (선 굵기 1px 슬림) =====
 const bO={responsive:true,maintainAspectRatio:false,
   plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(17,17,17,0.88)',titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},cornerRadius:8,padding:8}},
   scales:{x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
@@ -390,12 +399,11 @@ const bO={responsive:true,maintainAspectRatio:false,
 
 function mkC(id,cfg){if(charts[id]){charts[id].destroy();}const el=document.getElementById(id);if(el)charts[id]=new Chart(el,cfg);}
 
-// ===== 데이터 레이블 플러그인 (겹침 방지) =====
+// ===== 데이터 레이블 플러그인 =====
 const labelPlugin={
   id:'customLabel',
   afterDatasetsDraw(chart){
     const{ctx}=chart;
-    // 모든 레이블 위치 수집 후 겹침 조정
     const positions=[];
     chart.data.datasets.forEach((ds,di)=>{
       if(!ds._showLabel) return;
@@ -404,26 +412,19 @@ const labelPlugin={
         const v=ds.data[i];
         if(v===null||v===undefined||v===0) return;
         const pos=el.tooltipPosition();
-        const txt=ds._fmt?ds._fmt(v):String(v);
-        positions.push({x:pos.x,y:pos.y,txt,di,i});
+        positions.push({x:pos.x,y:pos.y,txt:ds._fmt?ds._fmt(v):String(v)});
       });
     });
-    // 같은 x 근방 레이블 겹침 방지
     for(let a=0;a<positions.length;a++){
       for(let b=a+1;b<positions.length;b++){
-        if(Math.abs(positions[a].x-positions[b].x)<30&&Math.abs(positions[a].y-positions[b].y)<14){
+        if(Math.abs(positions[a].x-positions[b].x)<30&&Math.abs(positions[a].y-positions[b].y)<14)
           positions[b].y=positions[a].y-14;
-        }
       }
     }
     positions.forEach(p=>{
-      ctx.save();
-      ctx.font='500 9px Inter';
-      ctx.fillStyle='#555';
-      ctx.textAlign='center';
-      ctx.textBaseline='bottom';
-      ctx.fillText(p.txt,p.x,p.y-3);
-      ctx.restore();
+      ctx.save();ctx.font='500 9px Inter';ctx.fillStyle='#555';
+      ctx.textAlign='center';ctx.textBaseline='bottom';
+      ctx.fillText(p.txt,p.x,p.y-3);ctx.restore();
     });
   }
 };
@@ -531,8 +532,10 @@ function renderTab1(p1){
     kc(`${activeM}월 목표`,f억(mTgt),'월 목표')+
     kc(`${activeM}월 매출`,f억(mERP),'ERP 기준')+
     kc(`${activeM}월 달성율`,mAch.toFixed(1)+'%','월 목표 대비',' hl');
+
+  // 도넛 (둘레=326.7)
   document.getElementById('dpct').textContent=ytdAch.toFixed(1)+'%';
-  document.getElementById('darc').style.strokeDashoffset=345.4*(1-Math.min(ytdAch,100)/100);
+  document.getElementById('darc').style.strokeDashoffset=326.7*(1-Math.min(ytdAch,100)/100);
   document.getElementById('dytd').textContent=f억(ytdERP);
   document.getElementById('dtgt').textContent=f억(ytdTgt);
   document.getElementById('dsub').textContent=`${selYear}년 ~${activeM}월 누적`;
@@ -541,16 +544,15 @@ function renderTab1(p1){
   const erpD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.ERP||null);
   const tgtD=ml.map((_,i)=>cur.find(x=>x.month===i+1)?.target||null);
   const achD=ml.map((_,i)=>{
-    const r=curR.find(x=>x.month===i+1);
-    if(!r) return null;
+    const r=curR.find(x=>x.month===i+1);if(!r)return null;
     const t=cur.find(x=>x.month===i+1)?.target||0;
     return t>0?parseFloat((r.ERP/t*100).toFixed(1)):null;
   });
 
-  // c1: 목표=그라데이션 면적(얇은 선), 실적=막대, 달성율=우축 선
+  // c1
   mkC('c1',{type:'bar',data:{labels:ml,datasets:[
     {label:'목표',data:tgtD,type:'line',order:3,fill:true,tension:0.4,
-     borderColor:'rgba(150,150,150,0.4)',borderWidth:1,pointRadius:0,
+     borderColor:'rgba(150,150,150,0.35)',borderWidth:1,pointRadius:0,
      backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),yAxisID:'y'},
     {label:'실적',data:erpD,type:'bar',order:2,backgroundColor:'#111',borderRadius:5,
      barPercentage:0.5,yAxisID:'y',_showLabel:true,_fmt:v=>v?f억(v):''},
@@ -563,7 +565,7 @@ function renderTab1(p1){
     y2:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#B8860B',callback:v=>v+'%'},border:{display:false},position:'right'},
   }}});
 
-  // c2: 전년=그라데이션 면적, 올해=얇은 선
+  // c2: 구매자수
   const buyD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.buyers||null);
   const prevBuy=ml.map((_,i)=>prev.find(x=>x.month===i+1)?.buyers||null);
   document.getElementById('bsub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
@@ -576,7 +578,7 @@ function renderTab1(p1){
      _showLabel:true,_fmt:v=>v?fNum(v):''},
   ]},options:{...bO}});
 
-  // c3: 환불금액=그라데이션 면적, 건수=얇은 선(좌), 환불율%=얇은 선(우)
+  // c3: 환불금액=영역, 환불율%=선, 커서에 환불금액+건수+%모두 툴팁표시 (건수 라인 제거)
   const refAmtD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.refundAmt||null);
   const refCntD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.refundCnt||null);
   const refRateD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.refRate||null);
@@ -584,19 +586,41 @@ function renderTab1(p1){
     {label:'환불금액',data:refAmtD,fill:true,tension:0.4,
      borderColor:'rgba(150,150,150,0.35)',borderWidth:1,pointRadius:0,
      backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),yAxisID:'y',order:3},
+    // 환불건수: 숨김(pointRadius0, borderWidth0) 툴팁에만 표시
     {label:'환불건수',data:refCntD,fill:false,tension:0.4,
-     borderColor:'#333',borderWidth:1.5,pointRadius:2.5,pointBackgroundColor:'#333',
-     yAxisID:'y',order:2,_showLabel:true,_fmt:v=>v?v+'건':''},
+     borderColor:'transparent',borderWidth:0,pointRadius:0,
+     yAxisID:'y',order:2},
     {label:'환불율%',data:refRateD,fill:false,tension:0.4,
      borderColor:'#D93030',borderWidth:1.5,pointRadius:2.5,pointBackgroundColor:'#D93030',
      yAxisID:'y2',order:1,_showLabel:true,_fmt:v=>v?v.toFixed(1)+'%':''},
-  ]},options:{...bO,scales:{
-    x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
-    y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false},position:'left'},
-    y2:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#D93030',callback:v=>v+'%'},border:{display:false},position:'right'},
-  }}});
+  ]},options:{...bO,
+    plugins:{...bO.plugins,
+      tooltip:{
+        backgroundColor:'rgba(17,17,17,0.88)',
+        titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},
+        cornerRadius:8,padding:8,
+        callbacks:{
+          label(ctx){
+            const ds=ctx.dataset,v=ctx.raw;
+            if(ds.label==='환불금액') return ` 금액: ${v?f억(v):'-'}`;
+            if(ds.label==='환불건수') return ` 건수: ${v?v+'건':'-'}`;
+            if(ds.label==='환불율%') return ` 환불율: ${v?v.toFixed(1)+'%':'-'}`;
+            return '';
+          },
+          // 같은 인덱스의 모든 데이터셋 묶어서 표시
+          title(items){return items[0]?.label||'';}
+        },
+        mode:'index',intersect:false,
+      }
+    },
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false}},
+      y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{font:{size:9,family:'Inter'},color:'#AAA'},border:{display:false},position:'left'},
+      y2:{grid:{display:false},ticks:{font:{size:9,family:'Inter'},color:'#D93030',callback:v=>v+'%'},border:{display:false},position:'right'},
+    }
+  }});
 
-  // c4: 전년=그라데이션 면적, 올해=얇은 검정 선 (노란색 → 검정)
+  // c4: 리뷰수
   const rvD=ml.map((_,i)=>curR.find(x=>x.month===i+1)?.reviews||null);
   const prevRv=ml.map((_,i)=>prev.find(x=>x.month===i+1)?.reviews||null);
   document.getElementById('rsub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
@@ -618,13 +642,11 @@ function renderTab2(p2,p1){
   const activeM=selMonth||(cur.length?Math.max(...cur.map(r=>r.month)):1);
   const curM=cur.filter(r=>r.month===activeM);
 
-  // 탭1 데이터
   const p1Data=parseTab1();
   const ytdReviews=p1Data.filter(r=>r.year===selYear&&r.month<=activeM).reduce((s,r)=>s+r.reviews,0);
   const monReviews=p1Data.find(r=>r.year===selYear&&r.month===activeM)?.reviews||0;
   const ytdNeg=cur.filter(r=>r.month<=activeM).length;
   const ytdNegPct=ytdReviews>0?(ytdNeg/ytdReviews*100).toFixed(1)+'%':'-%';
-  // 월 부정리뷰% = 월 부정리뷰 / 월 리뷰수
   const monNegPct=monReviews>0?(curM.length/monReviews*100).toFixed(1)+'%':'-%';
 
   const kc=(l,v,s)=>`<div class="kc"><div class="k-lbl">${l}</div><div class="k-val">${v}</div><div class="k-sub">${s}</div></div>`;
@@ -651,7 +673,7 @@ function renderTab2(p2,p1){
      _showLabel:true,_fmt:v=>v?String(v):''},
   ]},options:{...bO}});
 
-  // c6
+  // c6: 범례 chart.js 내장 legend 사용 (HTML 범례 제거)
   mkC('c6',{type:'line',data:{labels:ml,datasets:[
     {label:'1점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===1).length||null),
      borderColor:'#D93030',borderWidth:1.5,tension:0.4,pointRadius:2.5,fill:false,
@@ -662,17 +684,20 @@ function renderTab2(p2,p1){
     {label:'3점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===3).length||null),
      borderColor:'#AAA',borderWidth:1.5,tension:0.4,pointRadius:2.5,fill:false,
      _showLabel:true,_fmt:v=>v?String(v):''},
-  ]},options:{...bO,plugins:{...bO.plugins,legend:{display:true,labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:8}}}}});
+  ]},options:{...bO,plugins:{...bO.plugins,
+    legend:{display:true,position:'top',align:'end',labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:8,usePointStyle:true}}
+  }}});
 
-  // 카테고리: 해당 월 데이터
+  // 카테고리: 해당 월, 꽉 채움
   const catsMon={};curM.forEach(r=>{catsMon[r.category]=(catsMon[r.category]||0)+1;});
   const monTotal=curM.length||1;
   document.getElementById('catsub').textContent=`${selYear}년 ${activeM}월 (3점 이하)`;
-  document.getElementById('cats').innerHTML=Object.entries(catsMon).sort((a,b)=>b[1]-a[1]).map(([l,v])=>
-    `<div class="brow"><div class="blbl" style="width:88px">${l}</div><div class="btrack"><div class="bfill" style="width:${(v/monTotal*100).toFixed(0)}%;background:#111"></div></div><div class="bval">${v}</div></div>`
+  const catArr=Object.entries(catsMon).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('cats').innerHTML=catArr.map(([l,v])=>
+    `<div class="brow" style="margin-bottom:0"><div class="blbl" style="width:90px">${l}</div><div class="btrack"><div class="bfill" style="width:${(v/monTotal*100).toFixed(0)}%;background:#111"></div></div><div class="bval">${v}</div></div>`
   ).join('');
 
-  // c7: TOP3 기본
+  // c7: TOP3
   const models=[...new Set(cur.map(r=>r.model))].sort();
   if(selC7Prods.length===0){
     const cnt={};cur.forEach(r=>{cnt[r.model]=(cnt[r.model]||0)+1;});
@@ -696,15 +721,17 @@ function renderTab2(p2,p1){
     </div>`;
   }).join('');
 
-  buildRvDD(models,curM);
+  // 리뷰 목록용: 월 데이터 / 올해 전체 데이터 저장
+  _curMReviews=curM;
+  _allYearReviews=cur; // 올해 전체
+  buildRvDD(models);
+
   const maxSc=Math.max(...(curM.length?curM.map(r=>r.score):[10]),10);
   const slider=document.getElementById('sliderRange');
   slider.max=maxSc;slider.value=_scoreMin;
   document.getElementById('scoreMinInput').value=_scoreMin;
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
-  document.getElementById('scoreMaxDisp').textContent='이상 표시';
-  document.getElementById('rvtit').textContent=`${activeM}월 부정리뷰 전체 목록`;
-  _curMReviews=curM;
+  document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 전체`:`${activeM}월 부정리뷰 전체 목록`;
   renderRvTable();
 }
 
@@ -728,22 +755,25 @@ function buildDd7(models,cur,ml){
 
 function renderC7(cur,ml){
   const ds=selC7Prods.map((m,i)=>({
-    label:m,
-    data:ml.map((_,mi)=>cur.filter(r=>r.model===m&&r.month===mi+1).length||null),
-    borderColor:CHART_COLORS[i%CHART_COLORS.length],
-    borderWidth:1.5,tension:0.4,pointRadius:2.5,fill:false,
+    label:m,data:ml.map((_,mi)=>cur.filter(r=>r.model===m&&r.month===mi+1).length||null),
+    borderColor:CHART_COLORS[i%CHART_COLORS.length],borderWidth:1.5,tension:0.4,pointRadius:2.5,fill:false,
     _showLabel:true,_fmt:v=>v?String(v):'',
   }));
   mkC('c7',{type:'line',data:{labels:ml,datasets:ds},options:{...bO,
-    plugins:{...bO.plugins,legend:{display:true,labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:6}}}}});
+    plugins:{...bO.plugins,legend:{display:true,position:'top',align:'end',labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:6,usePointStyle:true}}}}});
 }
 
-function buildRvDD(models,curM){
+function buildRvDD(models){
   const list=document.getElementById('rvProdList');list.innerHTML='';
   const allItem=document.createElement('div');allItem.className='rv-dd-item';
-  allItem.innerHTML=`<input type="checkbox" checked/><span>전체</span>`;
+  allItem.innerHTML=`<input type="checkbox" id="rvAllChk" checked/><span>전체</span>`;
   allItem.querySelector('input').onchange=e=>{
-    if(e.target.checked){selRvProds=[];document.getElementById('rvProdLbl').textContent='상품명';list.querySelectorAll('input').forEach(x=>x.checked=false);e.target.checked=true;}
+    if(e.target.checked){
+      selRvProds=[];
+      document.getElementById('rvProdLbl').textContent='상품명';
+      // 다른 체크박스 해제
+      list.querySelectorAll('input:not(#rvAllChk)').forEach(x=>x.checked=false);
+    }
     renderRvTable();
   };
   list.appendChild(allItem);
@@ -751,10 +781,19 @@ function buildRvDD(models,curM){
     const item=document.createElement('div');item.className='rv-dd-item';
     item.innerHTML=`<input type="checkbox"/><span>${m}</span>`;
     item.querySelector('input').onchange=e=>{
-      if(e.target.checked){if(!selRvProds.includes(m))selRvProds.push(m);}
-      else selRvProds=selRvProds.filter(x=>x!==m);
+      if(e.target.checked){
+        if(!selRvProds.includes(m))selRvProds.push(m);
+        // 전체 체크박스 해제
+        const allChk=document.getElementById('rvAllChk');
+        if(allChk) allChk.checked=false;
+      } else {
+        selRvProds=selRvProds.filter(x=>x!==m);
+        if(!selRvProds.length){
+          const allChk=document.getElementById('rvAllChk');
+          if(allChk) allChk.checked=true;
+        }
+      }
       document.getElementById('rvProdLbl').textContent=selRvProds.length?selRvProds.join(', '):'상품명';
-      if(!selRvProds.length)list.querySelector('input').checked=true;
       renderRvTable();
     };
     list.appendChild(item);
@@ -762,7 +801,9 @@ function buildRvDD(models,curM){
 }
 
 function renderRvTable(){
-  let rows=_curMReviews.filter(r=>r.score>=_scoreMin);
+  // 올해전체 체크 여부에 따라 소스 결정
+  const src=_fullYear?_allYearReviews:_curMReviews;
+  let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
   document.getElementById('rvbody').innerHTML=rows.map((r,i)=>{
@@ -774,6 +815,17 @@ function renderRvTable(){
       <td>${r.model}</td><td>${r.category}</td>
     </tr>`;
   }).join('');
+}
+
+function onFullYearChange(){
+  _fullYear=document.getElementById('fullYearChk').checked;
+  const p2=parseTab2();
+  const neg=p2.filter(r=>r.rating<=3&&r.year===selYear);
+  _allYearReviews=neg;
+  // rvtit 업데이트
+  const activeM=selMonth||(neg.length?Math.max(...neg.map(r=>r.month)):1);
+  document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 전체`:`${activeM}월 부정리뷰 전체 목록`;
+  renderRvTable();
 }
 
 function onRangeChange(){
@@ -805,14 +857,15 @@ document.addEventListener('click',e=>{
 });
 
 function downloadExcel(){
-  let rows=_curMReviews.filter(r=>r.score>=_scoreMin);
+  const src=_fullYear?_allYearReviews:_curMReviews;
+  let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
   const data=[['순위','평점','영향력','등급','도움수','리뷰내용','제품명','카테고리','등록일']];
   rows.forEach((r,i)=>data.push([i+1,r.rating,r.score,r.level.lv,r.help,r.content,r.model,r.category,r.date]));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
   XLSX.utils.book_append_sheet(wb,ws,'부정리뷰');
-  XLSX.writeFile(wb,`SIDIZ_부정리뷰_${selYear}년${selMonth||'전체'}월.xlsx`);
+  XLSX.writeFile(wb,`SIDIZ_부정리뷰_${selYear}년${_fullYear?'전체':(selMonth||'전체')}월.xlsx`);
 }
 
 function sw(t){
