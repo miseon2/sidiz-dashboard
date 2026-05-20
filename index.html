@@ -68,9 +68,9 @@ body{background:var(--bg);min-height:100vh}
 .btrack{flex:1;height:6px;background:#F0F0F0;border-radius:99px;overflow:hidden}
 .bfill{height:100%;border-radius:99px}
 .bval{font-size:10px;font-weight:600;color:var(--dark);width:28px;text-align:right}
-.ddwrap{position:relative;margin-bottom:10px}
-.ddbtn{width:100%;padding:7px 12px;border-radius:10px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:11px;color:var(--dark);cursor:pointer;font-family:inherit;display:flex;justify-content:space-between}
-.ddlist{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
+.ddwrap{position:relative;margin-bottom:10px;display:flex;justify-content:flex-end}
+.ddbtn{padding:6px 12px;border-radius:10px;border:1px solid #EBEBEB;background:#F8F8F8;font-size:11px;color:var(--dark);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;max-width:260px}
+.ddlist{position:absolute;top:calc(100% + 4px);right:0;min-width:180px;background:#fff;border:1px solid #EBEBEB;border-radius:10px;max-height:220px;overflow-y:auto;z-index:50;box-shadow:var(--sh2);display:none}
 .ddlist.open{display:block}
 .dditem{padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--dark)}
 .dditem:hover{background:#F8F8F8}
@@ -259,7 +259,7 @@ body{background:var(--bg);min-height:100vh}
             <div id="cats" style="flex:1;display:flex;flex-direction:column;justify-content:space-evenly"></div>
           </div>
           <div class="cc">
-            <div class="ctit">월별 상품 부정 리뷰</div><div class="csub">제품 선택 (중복 가능) · 기본: 부정리뷰 TOP3</div>
+            <div class="ctit">상품별 부정 리뷰</div><div class="csub">제품 선택 (중복 가능) · 기본: 부정리뷰 TOP3</div>
             <div class="ddwrap">
               <button class="ddbtn" onclick="toggleDd()"><span id="ddlbl">제품 선택</span><span id="ddarr">▼</span></button>
               <div class="ddlist" id="ddlist"></div>
@@ -312,7 +312,7 @@ body{background:var(--bg);min-height:100vh}
           <div class="grade-info">
             <strong>등급 기준</strong> &nbsp;낮음 ≤5점 &nbsp;·&nbsp; 보통 6~10점 &nbsp;·&nbsp; 높음 11~15점 &nbsp;·&nbsp; 심각 16점↑
             &nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong>점수 기준</strong> &nbsp;평점(×2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1)
+            <strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1)
           </div>
           <div class="score-filter">
             <label>영향력 최솟값</label>
@@ -737,20 +737,60 @@ function renderTab2(p2,p1){
 
 function buildDd7(models,cur,ml){
   const dd=document.getElementById('ddlist');dd.innerHTML='';
+
+  // 전체 선택 아이템
+  const allItem=document.createElement('div');allItem.className='dditem';
+  allItem.innerHTML=`<input type="checkbox" id="dd7AllChk"/><span>전체 선택</span>`;
+  const allChk=allItem.querySelector('input');
+  allChk.onchange=e=>{
+    const checked=e.target.checked;
+    if(checked){
+      // 모든 상품 선택
+      selC7Prods=[...models];
+      dd.querySelectorAll('input.dd7-item').forEach(x=>x.checked=true);
+    } else {
+      // 모든 상품 해제
+      selC7Prods=[];
+      dd.querySelectorAll('input.dd7-item').forEach(x=>x.checked=false);
+    }
+    updateDd7Label();
+    renderC7(cur,ml);
+  };
+  dd.appendChild(allItem);
+
+  // 구분선
+  const sep=document.createElement('div');
+  sep.style.cssText='border-top:1px solid #F0F0F0;margin:2px 0';
+  dd.appendChild(sep);
+
   models.forEach(m=>{
     const chk=selC7Prods.includes(m);
     const item=document.createElement('div');item.className='dditem';
-    item.innerHTML=`<input type="checkbox" ${chk?'checked':''}/><span>${m}</span>`;
+    item.innerHTML=`<input type="checkbox" class="dd7-item" ${chk?'checked':''}/><span>${m}</span>`;
     item.querySelector('input').onchange=e=>{
       if(e.target.checked){if(!selC7Prods.includes(m))selC7Prods.push(m);}
       else selC7Prods=selC7Prods.filter(x=>x!==m);
-      document.getElementById('ddlbl').textContent=selC7Prods.length?selC7Prods.slice(0,2).join(', ')+(selC7Prods.length>2?` 외 ${selC7Prods.length-2}개`:''):'제품 선택';
+      // 전체선택 체크박스 상태 동기화
+      allChk.checked=selC7Prods.length===models.length;
+      allChk.indeterminate=selC7Prods.length>0&&selC7Prods.length<models.length;
+      updateDd7Label();
       renderC7(cur,ml);
     };
     dd.appendChild(item);
   });
-  document.getElementById('ddlbl').textContent=selC7Prods.length?selC7Prods.slice(0,2).join(', ')+(selC7Prods.length>2?` 외 ${selC7Prods.length-2}개`:''):'제품 선택';
+
+  // 초기 전체선택 상태 반영
+  allChk.checked=selC7Prods.length===models.length;
+  allChk.indeterminate=selC7Prods.length>0&&selC7Prods.length<models.length;
+  updateDd7Label();
   renderC7(cur,ml);
+}
+
+function updateDd7Label(){
+  document.getElementById('ddlbl').textContent=
+    selC7Prods.length===0?'제품 선택':
+    selC7Prods.length<=2?selC7Prods.join(', '):
+    selC7Prods.slice(0,2).join(', ')+` 외 ${selC7Prods.length-2}개`;
 }
 
 function renderC7(cur,ml){
