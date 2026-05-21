@@ -124,6 +124,8 @@ body{background:var(--bg);min-height:100vh}
 .rv-memo-btns{display:flex;justify-content:flex-end;gap:6px;align-items:center}
 .rv-memo-save{padding:4px 12px;border-radius:7px;border:1px solid #99BBFF;background:#EEF4FF;font-size:10px;font-weight:600;color:#3366CC;cursor:pointer;font-family:inherit}
 .rv-memo-save:hover{background:#3366CC;color:#fff}
+/* 메모버튼 고정크기 */
+.rv-memo-btn-fixed{display:inline-block;width:44px;text-align:center;padding:3px 0;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s}
 .rv-memo-saved{font-size:10px;color:#1A8A5A}
 /* 필터 2단 레이아웃 */
 .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
@@ -306,8 +308,9 @@ body{background:var(--bg);min-height:100vh}
         <div class="cc" style="margin-bottom:4px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">
             <div style="flex:1">
-              <div class="ctit-row">
-                <span class="ctit" id="rvtit">부정리뷰 리스트</span>
+              <div class="ctit-row" style="justify-content:space-between;align-items:center;display:flex;gap:10px">
+                <div style="display:flex;align-items:center;gap:4px">
+                  <span class="ctit" id="rvtit">부정리뷰 리스트</span>
                 <div class="info-wrap">
                   <div class="info-icon">i</div>
                   <div class="info-tooltip">
@@ -316,9 +319,18 @@ body{background:var(--bg);min-height:100vh}
                     · 도움수: 그대로 합산<br>
                     · 관련 리뷰: +5<br>
                     · 글자수: 50자↑→+5 / 30~49자→+3 / 30자↓→+1<br>
-                    · 포토/영상 첨부: +10<br>
+                    · 포토/영상 첨부: +5<br>
                     <span style="color:#888;display:block;margin-top:6px">낮음(≤5)·보통(6~10)·높음(11~15)·심각(16↑)</span>
                   </div>
+                </div>
+                </div>
+                <!-- 주문번호 검색 -->
+                <div style="position:relative;display:flex;align-items:center">
+                  <span style="font-size:10px;color:#AAA;position:absolute;left:8px;pointer-events:none">🔍</span>
+                  <input type="text" id="orderSearch" placeholder="주문번호 검색" oninput="renderRvTable()"
+                    style="padding:4px 10px 4px 26px;border:1px solid #EBEBEB;border-radius:8px;font-size:11px;font-family:inherit;color:#333;background:#F8F8F8;outline:none;width:150px"
+                    onfocus="this.style.borderColor='#BBB';this.style.background='#fff'"
+                    onblur="this.style.borderColor='#EBEBEB';this.style.background='#F8F8F8'">
                 </div>
               </div>
               <div class="csub" style="margin-bottom:0">영향력 점수 높은 순 정렬</div>
@@ -343,16 +355,17 @@ body{background:var(--bg);min-height:100vh}
           </div>
           <div class="grade-info">
             <div><strong>등급 기준</strong> &nbsp;낮음 ≤5점 &nbsp;·&nbsp; 보통 6~10점 &nbsp;·&nbsp; 높음 11~15점 &nbsp;·&nbsp; 심각 16점↑</div>
-            <div style="margin-top:3px"><strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1) + 포토/영상(+10)</div>
+            <div style="margin-top:3px"><strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1) + 포토/영상(+5)</div>
           </div>
           <div class="filter-row">
-            <!-- 좌: 평점 필터 -->
-            <div class="filter-box" style="gap:6px;flex-wrap:wrap">
-              <label>평점 필터</label>
-              <button class="rating-pill on" data-r="0" onclick="toggleRatingFilter(0)">전체</button>
-              <button class="rating-pill" data-r="1" onclick="toggleRatingFilter(1)">1점</button>
-              <button class="rating-pill" data-r="2" onclick="toggleRatingFilter(2)">2점</button>
-              <button class="rating-pill" data-r="3" onclick="toggleRatingFilter(3)">3점</button>
+            <!-- 좌: 평점 슬라이더 필터 -->
+            <div class="filter-box">
+              <label>평점 최솟값</label>
+              <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
+              <input type="range" id="ratingSlider" min="1" max="3" value="1" oninput="onRatingChange()" style="background:#111">
+              <span style="font-size:10px;color:var(--g2)">~</span>
+              <span id="ratingMaxDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px">3</span>
+              <input type="range" id="ratingSliderMax" min="1" max="3" value="3" oninput="onRatingChangeMax()">
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
             <div class="filter-box">
@@ -388,7 +401,7 @@ const _now=new Date();
 const _prevM=_now.getMonth()===0?12:_now.getMonth();
 let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
 let selC7Prods=[],selRvProds=[],_curMReviews=[],_allYearReviews=[],_scoreMin=0;
-let _fullYear=false,_ratingFilter=0; // 올해 전체보기 / 평점필터(0=전체)
+let _fullYear=false,_ratingMin=1,_ratingMax=3; // 올해 전체보기 / 평점 범위필터
 let _reviewMemos={}; // {orderId: memo텍스트} - Google Sheets 연동
 
 // ===== 제품 분류 =====
@@ -535,7 +548,7 @@ function parseTab2(){
   }).filter(Boolean);
 }
 function calcScore(r,h,rel,len,photo=false){
-  return({1:3,2:2,3:1}[r]||0)*2+h+(rel?5:0)+(len>=50?5:len>=30?3:1)+(photo?10:0);
+  return({1:3,2:2,3:1}[r]||0)*2+h+(rel?5:0)+(len>=50?5:len>=30?3:1)+(photo?5:0);
 }
 function scoreLevel(s){
   if(s<=5) return{lv:'낮음',color:'#999',bg:'#F5F5F5'};
@@ -839,6 +852,12 @@ function renderTab2(p2,p1){
   document.getElementById('scoreMinInput').value=_scoreMin;
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
+  // 평점 슬라이더 초기화
+  document.getElementById('ratingSlider').value=_ratingMin;
+  document.getElementById('ratingSliderMax').value=_ratingMax;
+  document.getElementById('ratingMinDisp').textContent=_ratingMin;
+  document.getElementById('ratingMaxDisp').textContent=_ratingMax;
+  updateRatingSliderBg();
   document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
   renderRvTable();
 }
@@ -969,7 +988,9 @@ function renderRvTable(){
   const src=_fullYear?_allYearReviews:_curMReviews;
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
-  if(_ratingFilter>0) rows=rows.filter(r=>r.rating===_ratingFilter);
+  rows=rows.filter(r=>r.rating>=_ratingMin&&r.rating<=_ratingMax);
+  const orderQ=(document.getElementById('orderSearch')?.value||'').trim();
+  if(orderQ) rows=rows.filter(r=>(r.orderId||'').includes(orderQ));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
   document.getElementById('rvbody').innerHTML=rows.map((r,i)=>{
     const sl=r.level;
@@ -987,7 +1008,7 @@ function renderRvTable(){
       <td>${r.content}</td>
       <td>${r.model}</td>
       <td>${r.category}</td>
-      <td><button class="rv-memo-btn" onclick="toggleRvMemo('${rowId}','${(r.orderId||'').replace(/'/g,"\'")}',this)" style="padding:3px 8px;border-radius:6px;border:1px solid ${hasMemo?'#99BBFF':'#EBEBEB'};background:${hasMemo?'#EEF4FF':'#F8F8F8'};font-size:10px;font-weight:600;color:${hasMemo?'#3366CC':'#999'};cursor:pointer;white-space:nowrap">${hasMemo?'▼메모':'+메모'}</button></td>
+      <td><button class="rv-memo-btn rv-memo-btn-fixed" onclick="toggleRvMemo('${rowId}','${(r.orderId||'').replace(/'/g,"\'")}',this)" style="border:1px solid ${hasMemo?'#99BBFF':'#EBEBEB'};background:${hasMemo?'#EEF4FF':'#F8F8F8'};color:${hasMemo?'#3366CC':'#999'}">${hasMemo?'▼메모':'+메모'}</button></td>
     </tr>
     <tr id="memo_${rowId}" class="rv-memo-row" style="display:none">
       <td colspan="11">
@@ -1023,6 +1044,7 @@ async function saveRvMemo(rowId,orderId){
     btn.style.borderColor=hasMemo?'#99BBFF':'#EBEBEB';
     btn.style.background=hasMemo?'#EEF4FF':'#F8F8F8';
     btn.style.color=hasMemo?'#3366CC':'#999';
+    btn.className='rv-memo-btn rv-memo-btn-fixed';
   }
   // Sheets 저장
   try{
@@ -1032,13 +1054,31 @@ async function saveRvMemo(rowId,orderId){
   }catch(e){console.error('메모 저장 실패',e);}
 }
 
-function toggleRatingFilter(r){
-  _ratingFilter=(_ratingFilter===r&&r!==0)?0:r;
-  document.querySelectorAll('.rating-pill').forEach(b=>{
-    const br=parseInt(b.dataset.r);
-    b.classList.toggle('on', _ratingFilter===0?br===0:br===_ratingFilter);
-  });
+function onRatingChange(){
+  _ratingMin=parseInt(document.getElementById('ratingSlider').value)||1;
+  if(_ratingMin>_ratingMax){_ratingMax=_ratingMin;document.getElementById('ratingSliderMax').value=_ratingMax;}
+  document.getElementById('ratingMinDisp').textContent=_ratingMin;
+  updateRatingSliderBg();
   renderRvTable();
+}
+function onRatingChangeMax(){
+  _ratingMax=parseInt(document.getElementById('ratingSliderMax').value)||3;
+  if(_ratingMax<_ratingMin){_ratingMin=_ratingMax;document.getElementById('ratingSlider').value=_ratingMin;}
+  document.getElementById('ratingMaxDisp').textContent=_ratingMax;
+  updateRatingSliderBg();
+  renderRvTable();
+}
+function updateRatingSliderBg(){
+  // 슬라이더 1~3범위에서 최솟값=1이면 전체검정(포함), 높이면 좌측 비워짐
+  const sl=document.getElementById('ratingSlider');
+  if(!sl) return;
+  const val=_ratingMin,max=3;
+  if(val<=1){sl.style.background='#111';}
+  else{const pct=((val-1)/(max-1)*100);sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;}
+  const slMax=document.getElementById('ratingSliderMax');
+  if(!slMax) return;
+  if(_ratingMax>=3){slMax.style.background='#111';}
+  else{const pct=((_ratingMax-1)/(max-1)*100);slMax.style.background=`linear-gradient(to right,#111 ${pct}%,#DCDCDC ${pct}%)`;}
 }
 
 function onFullYearChange(){
