@@ -1053,9 +1053,8 @@ async function saveRvMemo(rowId,orderId){
 function onRatingChange(){
   let v=parseInt(document.getElementById('ratingSlider').value);
   if(isNaN(v)) v=0;
-  // val=2(3점구간) 침범 불가 → 1로 강제
-  if(v>=2){v=1;document.getElementById('ratingSlider').value=1;}
-  _ratingMin=v+1; // val=0→1점이상, val=1→2점이상
+  // val=0→1점이상(전체), val=1→2점이상, val=2→3점이상
+  _ratingMin=v+1;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   renderRvTable();
