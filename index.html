@@ -357,7 +357,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="filter-box">
               <label>평점 최솟값</label>
               <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
-              <input type="range" id="ratingSlider" min="1" max="3" value="1" oninput="onRatingChange()" style="background:#111">
+              <input type="range" id="ratingSlider" min="1" max="2" value="1" oninput="onRatingChange()" style="background:#111">
               <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
@@ -841,11 +841,16 @@ function renderTab2(p2,p1){
 
   const maxSc=Math.max(...(curM.length?curM.map(r=>r.score):[10]),10);
   const slider=document.getElementById('sliderRange');
-  slider.max=maxSc;slider.value=_scoreMin;
+  // 영향력 슬라이더: max를 (maxSc-1)로 제한 → 최대점수 항목은 항상 포함
+  const sliderMax=Math.max(maxSc-1,0);
+  slider.max=sliderMax;
+  if(_scoreMin>sliderMax) _scoreMin=0;
+  slider.value=_scoreMin;
   document.getElementById('scoreMinInput').value=_scoreMin;
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
   // 평점 슬라이더 초기화
+  document.getElementById('ratingSlider').max=2;
   document.getElementById('ratingSlider').value=_ratingMin;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
@@ -1055,15 +1060,13 @@ function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
   const val=_ratingMin;
-  // 1~3을 3등분: val=1→33%, val=2→67%, val=3→100% 검정
-  // 빠지는 구간(val 미만)=회색, 포함 구간(val 이상)=검정
-  // 예: val=2 → 1점 구간(0~33%)은 회색, 2~3점 구간(33~100%)은 검정
-  const fillPct = val===1?100 : val===2?67 : 100;
-  const grayPct = val===1?0  : val===2?33  : 0;
-  if(grayPct===0){
+  // 슬라이더 max=2, 시각은 3등분
+  // val=1: 모두 포함 → 전체 검정
+  // val=2: 1점 영역(0~33%) 회색, 2점+3점(33~100%) 검정
+  if(val<=1){
     sl.style.background='#111';
   } else {
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${grayPct}%,#111 ${grayPct}%)`;
+    sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
   }
 }
 
@@ -1081,16 +1084,12 @@ function onFullYearChange(){
 function updateSliderBg(){
   const sl=document.getElementById('sliderRange');
   if(!sl) return;
-  const max=parseInt(sl.max)||30,val=parseInt(sl.value)||0;
-  // val=0 → 전체 검정(모두 포함)
-  // val>0 → 0~val 회색(빠지는구간), val~max 검정(포함구간)
-  // val=max → 마지막 한 점이라도 검정으로 보이도록 pct를 max-1 기준으로 계산
+  const max=parseInt(sl.max)||1,val=parseInt(sl.value)||0;
+  // slider.max = 실제최대-1, 실제최대 항목은 항상 포함(검정)
+  // val=0: 전체검정 / val>0: 0~val 회색, val 이후 검정
+  // thumb이 max(=실제최대-1)까지만 이동 → 오른쪽 끝(실제최대 구간) 항상 검정 보임
   if(val===0){
     sl.style.background='#111';
-  } else if(val>=max){
-    // 최대값: 거의 다 회색, 맨 오른쪽 끝만 검정(최솟값=max인 항목만 포함)
-    const pct=max>0?((max-1)/max*100):0;
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   } else {
     const pct=max>0?(val/max*100):0;
     sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
