@@ -124,8 +124,8 @@ body{background:var(--bg);min-height:100vh}
 .rv-memo-btns{display:flex;justify-content:flex-end;gap:6px;align-items:center}
 .rv-memo-save{padding:4px 12px;border-radius:7px;border:1px solid #99BBFF;background:#EEF4FF;font-size:10px;font-weight:600;color:#3366CC;cursor:pointer;font-family:inherit}
 .rv-memo-save:hover{background:#3366CC;color:#fff}
-/* 메모버튼 고정크기 */
-.rv-memo-btn-fixed{display:inline-block;width:44px;text-align:center;padding:3px 0;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s}
+/* 메모버튼 고정크기 - font-weight 항상 500 고정 */
+.rv-memo-btn-fixed{display:inline-block;width:44px;text-align:center;padding:3px 0;border-radius:6px;font-size:10px;font-weight:500!important;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s}
 .rv-memo-saved{font-size:10px;color:#1A8A5A}
 /* 필터 2단 레이아웃 */
 .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
@@ -1035,7 +1035,7 @@ async function saveRvMemo(rowId,orderId){
     btn.style.borderColor=hasMemo?'#99BBFF':'#EBEBEB';
     btn.style.background=hasMemo?'#EEF4FF':'#F8F8F8';
     btn.style.color=hasMemo?'#3366CC':'#999';
-    btn.className='rv-memo-btn rv-memo-btn-fixed';
+    // className 유지 (폰트굵기 변경 방지)
   }
   // Sheets 저장
   try{
@@ -1055,9 +1055,16 @@ function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
   const val=_ratingMin;
-  // 1=전체검정, 2~3=좌측(빠지는구간) 회색
-  if(val<=1){sl.style.background='#111';}
-  else{const pct=((val-1)/2*100);sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;}
+  // 1~3을 3등분: val=1→33%, val=2→67%, val=3→100% 검정
+  // 빠지는 구간(val 미만)=회색, 포함 구간(val 이상)=검정
+  // 예: val=2 → 1점 구간(0~33%)은 회색, 2~3점 구간(33~100%)은 검정
+  const fillPct = val===1?100 : val===2?67 : 100;
+  const grayPct = val===1?0  : val===2?33  : 0;
+  if(grayPct===0){
+    sl.style.background='#111';
+  } else {
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${grayPct}%,#111 ${grayPct}%)`;
+  }
 }
 
 function onFullYearChange(){
@@ -1075,9 +1082,15 @@ function updateSliderBg(){
   const sl=document.getElementById('sliderRange');
   if(!sl) return;
   const max=parseInt(sl.max)||30,val=parseInt(sl.value)||0;
-  // val=0 → 전체 검정 / val>0 → 0~val 구간만 회색(빠지는 영역), val~max 검정(포함 영역)
+  // val=0 → 전체 검정(모두 포함)
+  // val>0 → 0~val 회색(빠지는구간), val~max 검정(포함구간)
+  // val=max → 마지막 한 점이라도 검정으로 보이도록 pct를 max-1 기준으로 계산
   if(val===0){
     sl.style.background='#111';
+  } else if(val>=max){
+    // 최대값: 거의 다 회색, 맨 오른쪽 끝만 검정(최솟값=max인 항목만 포함)
+    const pct=max>0?((max-1)/max*100):0;
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   } else {
     const pct=max>0?(val/max*100):0;
     sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
