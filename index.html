@@ -1060,15 +1060,15 @@ function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
   const val=_ratingMin;
-  // 슬라이더 max=2, thumb: val=1→왼쪽끝, val=2→오른쪽끝
-  // 시각은 3등분(각 33%): 1점구간/2점구간/3점구간
-  // val=1: 전체 검정 (1,2,3점 모두 포함)
-  // val=2: 앞 33%(1점구간) 회색 + 나머지 66%(2점+3점) 검정
-  // 3점구간(66~100%)은 항상 검정 = 항상 포함
-  if(val<=1){
+  const min=parseInt(sl.min)||1, max=parseInt(sl.max)||2;
+  // 영향력 슬라이더와 완전히 동일한 방식
+  // val=min(1): 전체 검정(모두 포함)
+  // val>min: 앞 (val-min)/(max-min)*100% 회색(빠지는구간), 나머지 검정(포함)
+  if(val<=min){
     sl.style.background='#111';
   } else {
-    sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
+    const pct=(val-min)/(max-min)*100;
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   }
 }
 
