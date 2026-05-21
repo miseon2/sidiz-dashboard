@@ -116,6 +116,23 @@ body{background:var(--bg);min-height:100vh}
 .full-year-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--g2);cursor:pointer;padding:4px 0}
 .full-year-wrap input{accent-color:var(--dark);cursor:pointer}
 .full-year-wrap:hover{color:var(--dark)}
+/* 리뷰 메모 슬라이드 */
+.rv-memo-row{background:#F8FAFF;border-top:1px solid #EEF0F8}
+.rv-memo-inner{padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+.rv-memo-textarea{width:100%;min-height:56px;border:1px solid #DDEEFF;border-radius:8px;padding:8px 10px;font-size:11px;font-family:inherit;color:#333;resize:none;outline:none;line-height:1.7;background:#fff}
+.rv-memo-textarea:focus{border-color:#99BBFF}
+.rv-memo-btns{display:flex;justify-content:flex-end;gap:6px;align-items:center}
+.rv-memo-save{padding:4px 12px;border-radius:7px;border:1px solid #99BBFF;background:#EEF4FF;font-size:10px;font-weight:600;color:#3366CC;cursor:pointer;font-family:inherit}
+.rv-memo-save:hover{background:#3366CC;color:#fff}
+.rv-memo-saved{font-size:10px;color:#1A8A5A}
+/* 필터 2단 레이아웃 */
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.filter-box{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#F8F8F8;border-radius:10px;border:1px solid #EBEBEB}
+.filter-box label{font-size:10px;color:var(--g2);white-space:nowrap;flex-shrink:0}
+.filter-box input[type=range]{cursor:pointer;flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:99px;outline:none}
+.filter-box input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #111;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.18)}
+.rating-pill{padding:3px 9px;border-radius:99px;font-size:10px;font-weight:600;border:1px solid #EBEBEB;background:#F5F5F5;color:#888;cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+.rating-pill.on{background:#111;color:#fff;border-color:#111}
 </style>
 </head>
 <body>
@@ -290,15 +307,16 @@ body{background:var(--bg);min-height:100vh}
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">
             <div style="flex:1">
               <div class="ctit-row">
-                <span class="ctit" id="rvtit">부정리뷰 전체 목록</span>
+                <span class="ctit" id="rvtit">부정리뷰 리스트</span>
                 <div class="info-wrap">
                   <div class="info-icon">i</div>
                   <div class="info-tooltip">
                     <strong style="color:#FFD66B;display:block;margin-bottom:6px">영향력 점수 산정 기준</strong>
-                    · 평점(×2): 1점→+6 / 2점→+4 / 3점→+2<br>
+                    · 평점: 1점→+6 / 2점→+4 / 3점→+2<br>
                     · 도움수: 그대로 합산<br>
                     · 관련 리뷰: +5<br>
                     · 글자수: 50자↑→+5 / 30~49자→+3 / 30자↓→+1<br>
+                    · 포토/영상 첨부: +10<br>
                     <span style="color:#888;display:block;margin-top:6px">낮음(≤5)·보통(6~10)·높음(11~15)·심각(16↑)</span>
                   </div>
                 </div>
@@ -324,23 +342,34 @@ body{background:var(--bg);min-height:100vh}
             </div>
           </div>
           <div class="grade-info">
-            <strong>등급 기준</strong> &nbsp;낮음 ≤5점 &nbsp;·&nbsp; 보통 6~10점 &nbsp;·&nbsp; 높음 11~15점 &nbsp;·&nbsp; 심각 16점↑
-            &nbsp;&nbsp;|&nbsp;&nbsp;
-            <strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1)
+            <div><strong>등급 기준</strong> &nbsp;낮음 ≤5점 &nbsp;·&nbsp; 보통 6~10점 &nbsp;·&nbsp; 높음 11~15점 &nbsp;·&nbsp; 심각 16점↑</div>
+            <div style="margin-top:3px"><strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1) + 포토/영상(+10)</div>
           </div>
-          <div class="score-filter">
-            <label>영향력 최솟값</label>
-            <span id="scoreMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">0</span>
-            <input type="range" id="sliderRange" min="0" max="30" value="0" oninput="onRangeChange()">
-            <span style="font-size:10px;color:var(--g2)">이상 표시</span>
-            <input type="number" id="scoreMinInput" class="score-num" value="0" min="0" placeholder="직접입력" oninput="onMinInput()">
+          <div class="filter-row">
+            <!-- 좌: 평점 필터 -->
+            <div class="filter-box" style="gap:6px;flex-wrap:wrap">
+              <label>평점 필터</label>
+              <button class="rating-pill on" data-r="0" onclick="toggleRatingFilter(0)">전체</button>
+              <button class="rating-pill" data-r="1" onclick="toggleRatingFilter(1)">1점</button>
+              <button class="rating-pill" data-r="2" onclick="toggleRatingFilter(2)">2점</button>
+              <button class="rating-pill" data-r="3" onclick="toggleRatingFilter(3)">3점</button>
+            </div>
+            <!-- 우: 영향력 최솟값 슬라이더 -->
+            <div class="filter-box">
+              <label>영향력 최솟값</label>
+              <span id="scoreMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">0</span>
+              <input type="range" id="sliderRange" min="0" max="30" value="0" oninput="onRangeChange()" style="background:#111">
+              <input type="number" id="scoreMinInput" class="score-num" value="0" min="0" oninput="onMinInput()">
+            </div>
           </div>
           <table class="rv-table">
             <thead><tr>
-              <th style="width:32px">#</th><th style="width:42px">평점</th>
-              <th style="width:50px">영향력</th><th style="width:50px">등급</th>
-              <th style="width:42px">도움수</th><th>리뷰 내용</th>
-              <th style="width:65px">제품명</th><th style="width:60px">카테고리</th>
+              <th style="width:36px">순위</th><th style="width:38px">평점</th>
+              <th style="width:46px">영향력</th><th style="width:46px">등급</th>
+              <th style="width:36px">도움수</th><th style="width:36px">포토</th>
+              <th style="width:80px">주문번호</th><th>리뷰 내용</th>
+              <th style="width:58px">제품명</th><th style="width:58px">카테고리</th>
+              <th style="width:52px">메모</th>
             </tr></thead>
             <tbody id="rvbody"></tbody>
           </table>
@@ -359,7 +388,8 @@ const _now=new Date();
 const _prevM=_now.getMonth()===0?12:_now.getMonth();
 let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
 let selC7Prods=[],selRvProds=[],_curMReviews=[],_allYearReviews=[],_scoreMin=0;
-let _fullYear=false; // 올해 전체보기 상태
+let _fullYear=false,_ratingFilter=0; // 올해 전체보기 / 평점필터(0=전체)
+let _reviewMemos={}; // {orderId: memo텍스트} - Google Sheets 연동
 
 // ===== 제품 분류 =====
 function classifyProduct(name){
@@ -448,17 +478,27 @@ Chart.register(labelPlugin);
 async function fetchAll(){
   document.getElementById('last-updated').textContent='데이터 동기화 중...';
   try{
-    const[j1,j2]=await Promise.all([
+    const[j1,j2,jm]=await Promise.all([
       fetch(`${API}?gid=${GID1}`).then(r=>r.json()),
       fetch(`${API}?gid=${GID2}`).then(r=>r.json()),
+      postAPI({action:'getMemos'}).catch(()=>({ok:false})),
     ]);
     raw1=j1.data||[];raw2=j2.data||[];
+    if(jm.ok&&jm.data){
+      _reviewMemos=jm.data.review||{};
+      window._monthlyMemos=jm.data.monthly||{};
+    }
     document.getElementById('last-updated').textContent='Last Updated: '+new Date().toLocaleTimeString();
     render();
   }catch(e){
     console.error(e);
     document.getElementById('last-updated').textContent='연결 실패 (F12 확인)';
   }
+}
+
+async function postAPI(body){
+  const r=await fetch(API,{method:'POST',body:JSON.stringify(body)});
+  return r.json();
 }
 
 // ===== 파싱 =====
@@ -482,13 +522,21 @@ function parseTab2(){
     const rating=parseInt(r['구매자 평점'])||0;
     const content=String(r['리뷰상세내용']||'');
     const help=parseInt(r['리뷰도움수'])||0;
-    const score=calcScore(rating,help,!!r['관련리뷰글번호'],content.length);
+    // M열: 포토/영상 링크 여부
+    const photoLink=String(r['포토/동영상리뷰링크']||r['M']||Object.values(r)[12]||'').trim();
+    const hasPhoto=photoLink.length>0;
+    // C열: 상품주문번호
+    const orderId=String(r['상품주문번호']||r['C']||Object.values(r)[2]||'').trim();
+    const score=calcScore(rating,help,!!r['관련리뷰글번호'],content.length,hasPhoto);
     const prodName=String(r['상품명']||'');
     const{category,model}=classifyProduct(prodName);
-    return{year:parseInt(p[0]),month:parseInt(p[1]),date:d,prodName,rating,content,help,score,level:scoreLevel(score),category,model};
+    return{year:parseInt(p[0]),month:parseInt(p[1]),date:d,prodName,rating,content,help,
+      hasPhoto,orderId,score,level:scoreLevel(score),category,model};
   }).filter(Boolean);
 }
-function calcScore(r,h,rel,len){return({1:3,2:2,3:1}[r]||0)*2+h+(rel?5:0)+(len>=50?5:len>=30?3:1);}
+function calcScore(r,h,rel,len,photo=false){
+  return({1:3,2:2,3:1}[r]||0)*2+h+(rel?5:0)+(len>=50?5:len>=30?3:1)+(photo?10:0);
+}
 function scoreLevel(s){
   if(s<=5) return{lv:'낮음',color:'#999',bg:'#F5F5F5'};
   if(s<=10) return{lv:'보통',color:'#A07000',bg:'#FFF8E0'};
@@ -791,7 +839,7 @@ function renderTab2(p2,p1){
   document.getElementById('scoreMinInput').value=_scoreMin;
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
-  document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 전체`:`${activeM}월 부정리뷰 전체 목록`;
+  document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
   renderRvTable();
 }
 
@@ -918,20 +966,79 @@ function buildRvDD(models){
 }
 
 function renderRvTable(){
-  // 올해전체 체크 여부에 따라 소스 결정
   const src=_fullYear?_allYearReviews:_curMReviews;
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
+  if(_ratingFilter>0) rows=rows.filter(r=>r.rating===_ratingFilter);
   rows=rows.slice().sort((a,b)=>b.score-a.score);
   document.getElementById('rvbody').innerHTML=rows.map((r,i)=>{
     const sl=r.level;
-    return`<tr>
-      <td>${i+1}</td><td>${r.rating}점</td><td>${r.score}</td>
+    const memo=_reviewMemos[r.orderId]||'';
+    const hasMemo=memo.length>0;
+    const rowId=`rv_${i}`;
+    return`<tr id="tr_${rowId}">
+      <td>${i+1}</td>
+      <td>${r.rating}점</td>
+      <td>${r.score}</td>
       <td><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${sl.lv}</span></td>
-      <td>${r.help}</td><td>${r.content}</td>
-      <td>${r.model}</td><td>${r.category}</td>
+      <td>${r.help}</td>
+      <td style="text-align:center">${r.hasPhoto?'O':''}</td>
+      <td style="font-size:10px;color:#888">${r.orderId||'-'}</td>
+      <td>${r.content}</td>
+      <td>${r.model}</td>
+      <td>${r.category}</td>
+      <td><button class="rv-memo-btn" onclick="toggleRvMemo('${rowId}','${(r.orderId||'').replace(/'/g,"\'")}',this)" style="padding:3px 8px;border-radius:6px;border:1px solid ${hasMemo?'#99BBFF':'#EBEBEB'};background:${hasMemo?'#EEF4FF':'#F8F8F8'};font-size:10px;font-weight:600;color:${hasMemo?'#3366CC':'#999'};cursor:pointer;white-space:nowrap">${hasMemo?'▼메모':'+메모'}</button></td>
+    </tr>
+    <tr id="memo_${rowId}" class="rv-memo-row" style="display:none">
+      <td colspan="11">
+        <div class="rv-memo-inner">
+          <textarea class="rv-memo-textarea" id="mta_${rowId}" placeholder="해당 리뷰 확인 내용을 메모하세요...">${memo}</textarea>
+          <div class="rv-memo-btns">
+            <span class="rv-memo-saved" id="msaved_${rowId}" style="display:none">✓ 저장됨</span>
+            <button class="rv-memo-save" onclick="saveRvMemo('${rowId}','${(r.orderId||'').replace(/'/g,"\'")}')">저장</button>
+          </div>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+}
+
+function toggleRvMemo(rowId,orderId,btn){
+  const memoRow=document.getElementById('memo_'+rowId);
+  if(!memoRow) return;
+  const isOpen=memoRow.style.display!=='none';
+  memoRow.style.display=isOpen?'none':'table-row';
+  if(!isOpen) document.getElementById('mta_'+rowId)?.focus();
+}
+
+async function saveRvMemo(rowId,orderId){
+  const ta=document.getElementById('mta_'+rowId);
+  const text=ta?.value||'';
+  _reviewMemos[orderId]=text;
+  // 버튼 상태 업데이트
+  const btn=document.querySelector(`#tr_${rowId} .rv-memo-btn`);
+  if(btn){
+    const hasMemo=text.length>0;
+    btn.textContent=hasMemo?'▼메모':'+메모';
+    btn.style.borderColor=hasMemo?'#99BBFF':'#EBEBEB';
+    btn.style.background=hasMemo?'#EEF4FF':'#F8F8F8';
+    btn.style.color=hasMemo?'#3366CC':'#999';
+  }
+  // Sheets 저장
+  try{
+    await postAPI({action:'saveReviewMemo',orderId,text});
+    const msg=document.getElementById('msaved_'+rowId);
+    if(msg){msg.style.display='inline';setTimeout(()=>msg.style.display='none',2000);}
+  }catch(e){console.error('메모 저장 실패',e);}
+}
+
+function toggleRatingFilter(r){
+  _ratingFilter=(_ratingFilter===r&&r!==0)?0:r;
+  document.querySelectorAll('.rating-pill').forEach(b=>{
+    const br=parseInt(b.dataset.r);
+    b.classList.toggle('on', _ratingFilter===0?br===0:br===_ratingFilter);
+  });
+  renderRvTable();
 }
 
 function onFullYearChange(){
@@ -941,7 +1048,7 @@ function onFullYearChange(){
   _allYearReviews=neg;
   // rvtit 업데이트
   const activeM=selMonth||(neg.length?Math.max(...neg.map(r=>r.month)):1);
-  document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 전체`:`${activeM}월 부정리뷰 전체 목록`;
+  document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
   renderRvTable();
 }
 
@@ -949,9 +1056,13 @@ function updateSliderBg(){
   const sl=document.getElementById('sliderRange');
   if(!sl) return;
   const max=parseInt(sl.max)||30,val=parseInt(sl.value)||0;
-  const pct=max>0?(val/max*100):0;
-  // 0이면 전체 검정, 높아질수록 오른쪽이 비어 보임
-  sl.style.background=`linear-gradient(to right,#111 ${pct}%,#DCDCDC ${pct}%)`;
+  // val=0 → 전체 검정 / val>0 → 0~val 구간만 회색(빠지는 영역), val~max 검정(포함 영역)
+  if(val===0){
+    sl.style.background='#111';
+  } else {
+    const pct=max>0?(val/max*100):0;
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
+  }
 }
 function onRangeChange(){
   _scoreMin=parseInt(document.getElementById('sliderRange').value)||0;
@@ -989,8 +1100,8 @@ function downloadExcel(){
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
-  const data=[['순위','평점','영향력','등급','도움수','리뷰내용','제품명','카테고리','등록일']];
-  rows.forEach((r,i)=>data.push([i+1,r.rating,r.score,r.level.lv,r.help,r.content,r.model,r.category,r.date]));
+  const data=[['순위','평점','영향력','등급','도움수','포토/영상','주문번호','리뷰내용','제품명','카테고리','등록일','메모']];
+  rows.forEach((r,i)=>data.push([i+1,r.rating,r.score,r.level.lv,r.help,r.hasPhoto?'O':'',r.orderId||'',r.content,r.model,r.category,r.date,_reviewMemos[r.orderId]||'']));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
   XLSX.utils.book_append_sheet(wb,ws,'부정리뷰');
   XLSX.writeFile(wb,`SIDIZ_부정리뷰_${selYear}년${_fullYear?'전체':(selMonth||'전체')}월.xlsx`);
@@ -1009,19 +1120,29 @@ function showDonutHover(show){
   if(el) el.style.display=show?'block':'none';
 }
 
-// ===== 메모 저장/불러오기 (localStorage) =====
-function memoKey(){return `sidiz_memo_${selYear}_${selMonth||'all'}`;}
-
-function saveMemo(){
+// ===== 메모 - Google Sheets 연동 =====
+async function saveMemo(){
   const v=document.getElementById('memoArea')?.value||'';
-  try{localStorage.setItem(memoKey(),v);}catch(e){}
-  const msg=document.getElementById('memoSaved');
-  if(msg){msg.style.display='block';setTimeout(()=>msg.style.display='none',2000);}
+  try{
+    await postAPI({action:'saveMemo',year:selYear,month:selMonth||'all',text:v});
+    if(!window._monthlyMemos) window._monthlyMemos={};
+    window._monthlyMemos[`${selYear}_${selMonth||'all'}`]=v;
+    const msg=document.getElementById('memoSaved');
+    if(msg){msg.style.display='block';setTimeout(()=>msg.style.display='none',2000);}
+  }catch(e){
+    console.error('메모 저장 실패',e);
+    // fallback: localStorage
+    try{localStorage.setItem(`sidiz_memo_${selYear}_${selMonth||'all'}`,v);}catch(ex){}
+    const msg=document.getElementById('memoSaved');
+    if(msg){msg.style.display='block';setTimeout(()=>msg.style.display='none',2000);}
+  }
 }
 
 function loadMemo(){
   const el=document.getElementById('memoArea');if(!el)return;
-  try{el.value=localStorage.getItem(memoKey())||'';}catch(e){el.value='';}
+  const key=`${selYear}_${selMonth||'all'}`;
+  const v=(window._monthlyMemos&&window._monthlyMemos[key])||'';
+  el.value=v||'';
 }
 
 window.onload=fetchAll;
