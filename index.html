@@ -308,9 +308,8 @@ body{background:var(--bg);min-height:100vh}
         <div class="cc" style="margin-bottom:4px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">
             <div style="flex:1">
-              <div class="ctit-row" style="justify-content:space-between;align-items:center;display:flex;gap:10px">
-                <div style="display:flex;align-items:center;gap:4px">
-                  <span class="ctit" id="rvtit">부정리뷰 리스트</span>
+              <div class="ctit-row" style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+                <span class="ctit" id="rvtit">부정리뷰 리스트</span>
                 <div class="info-wrap">
                   <div class="info-icon">i</div>
                   <div class="info-tooltip">
@@ -323,15 +322,11 @@ body{background:var(--bg);min-height:100vh}
                     <span style="color:#888;display:block;margin-top:6px">낮음(≤5)·보통(6~10)·높음(11~15)·심각(16↑)</span>
                   </div>
                 </div>
-                </div>
-                <!-- 주문번호 검색 -->
-                <div style="position:relative;display:flex;align-items:center">
-                  <span style="font-size:10px;color:#AAA;position:absolute;left:8px;pointer-events:none">🔍</span>
-                  <input type="text" id="orderSearch" placeholder="주문번호 검색" oninput="renderRvTable()"
-                    style="padding:4px 10px 4px 26px;border:1px solid #EBEBEB;border-radius:8px;font-size:11px;font-family:inherit;color:#333;background:#F8F8F8;outline:none;width:150px"
-                    onfocus="this.style.borderColor='#BBB';this.style.background='#fff'"
-                    onblur="this.style.borderColor='#EBEBEB';this.style.background='#F8F8F8'">
-                </div>
+                <!-- 주문번호 검색: 상품명 버튼과 동일 스타일 -->
+                <input type="text" id="orderSearch" placeholder="주문번호 검색" oninput="renderRvTable()"
+                  style="padding:5px 11px;border:1px solid #EBEBEB;border-radius:8px;font-size:10px;font-family:inherit;color:#333;background:#F8F8F8;outline:none;height:30px;width:140px"
+                  onfocus="this.style.borderColor='#BBB';this.style.background='#fff'"
+                  onblur="this.style.borderColor='#EBEBEB';this.style.background='#F8F8F8'">
               </div>
               <div class="csub" style="margin-bottom:0">영향력 점수 높은 순 정렬</div>
             </div>
@@ -358,14 +353,12 @@ body{background:var(--bg);min-height:100vh}
             <div style="margin-top:3px"><strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1) + 포토/영상(+5)</div>
           </div>
           <div class="filter-row">
-            <!-- 좌: 평점 슬라이더 필터 -->
+            <!-- 좌: 평점 단일 슬라이더 (1~3, 최솟값) -->
             <div class="filter-box">
               <label>평점 최솟값</label>
               <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
               <input type="range" id="ratingSlider" min="1" max="3" value="1" oninput="onRatingChange()" style="background:#111">
-              <span style="font-size:10px;color:var(--g2)">~</span>
-              <span id="ratingMaxDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px">3</span>
-              <input type="range" id="ratingSliderMax" min="1" max="3" value="3" oninput="onRatingChangeMax()">
+              <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
             <div class="filter-box">
@@ -401,7 +394,7 @@ const _now=new Date();
 const _prevM=_now.getMonth()===0?12:_now.getMonth();
 let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
 let selC7Prods=[],selRvProds=[],_curMReviews=[],_allYearReviews=[],_scoreMin=0;
-let _fullYear=false,_ratingMin=1,_ratingMax=3; // 올해 전체보기 / 평점 범위필터
+let _fullYear=false,_ratingMin=1; // 올해 전체보기 / 평점 최솟값(이상 표시)
 let _reviewMemos={}; // {orderId: memo텍스트} - Google Sheets 연동
 
 // ===== 제품 분류 =====
@@ -854,9 +847,7 @@ function renderTab2(p2,p1){
   updateSliderBg();
   // 평점 슬라이더 초기화
   document.getElementById('ratingSlider').value=_ratingMin;
-  document.getElementById('ratingSliderMax').value=_ratingMax;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
-  document.getElementById('ratingMaxDisp').textContent=_ratingMax;
   updateRatingSliderBg();
   document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
   renderRvTable();
@@ -988,7 +979,7 @@ function renderRvTable(){
   const src=_fullYear?_allYearReviews:_curMReviews;
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
-  rows=rows.filter(r=>r.rating>=_ratingMin&&r.rating<=_ratingMax);
+  rows=rows.filter(r=>r.rating>=_ratingMin);
   const orderQ=(document.getElementById('orderSearch')?.value||'').trim();
   if(orderQ) rows=rows.filter(r=>(r.orderId||'').includes(orderQ));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
@@ -1056,29 +1047,17 @@ async function saveRvMemo(rowId,orderId){
 
 function onRatingChange(){
   _ratingMin=parseInt(document.getElementById('ratingSlider').value)||1;
-  if(_ratingMin>_ratingMax){_ratingMax=_ratingMin;document.getElementById('ratingSliderMax').value=_ratingMax;}
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   renderRvTable();
 }
-function onRatingChangeMax(){
-  _ratingMax=parseInt(document.getElementById('ratingSliderMax').value)||3;
-  if(_ratingMax<_ratingMin){_ratingMin=_ratingMax;document.getElementById('ratingSlider').value=_ratingMin;}
-  document.getElementById('ratingMaxDisp').textContent=_ratingMax;
-  updateRatingSliderBg();
-  renderRvTable();
-}
 function updateRatingSliderBg(){
-  // 슬라이더 1~3범위에서 최솟값=1이면 전체검정(포함), 높이면 좌측 비워짐
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
-  const val=_ratingMin,max=3;
+  const val=_ratingMin;
+  // 1=전체검정, 2~3=좌측(빠지는구간) 회색
   if(val<=1){sl.style.background='#111';}
-  else{const pct=((val-1)/(max-1)*100);sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;}
-  const slMax=document.getElementById('ratingSliderMax');
-  if(!slMax) return;
-  if(_ratingMax>=3){slMax.style.background='#111';}
-  else{const pct=((_ratingMax-1)/(max-1)*100);slMax.style.background=`linear-gradient(to right,#111 ${pct}%,#DCDCDC ${pct}%)`;}
+  else{const pct=((val-1)/2*100);sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;}
 }
 
 function onFullYearChange(){
