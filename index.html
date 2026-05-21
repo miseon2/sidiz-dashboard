@@ -357,7 +357,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="filter-box">
               <label>평점 최솟값</label>
               <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
-              <input type="range" id="ratingSlider" min="1" max="2" value="1" oninput="onRatingChange()" style="background:#111">
+              <input type="range" id="ratingSlider" min="0" max="3" value="0" oninput="onRatingChange()" style="background:#111">
               <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
@@ -850,8 +850,8 @@ function renderTab2(p2,p1){
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
   // 평점 슬라이더 초기화
-  document.getElementById('ratingSlider').max=2;
-  document.getElementById('ratingSlider').value=Math.min(_ratingMin,2);
+  document.getElementById('ratingSlider').max=3;
+  document.getElementById('ratingSlider').value=_ratingMin-1;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
@@ -1051,7 +1051,11 @@ async function saveRvMemo(rowId,orderId){
 }
 
 function onRatingChange(){
-  _ratingMin=parseInt(document.getElementById('ratingSlider').value)||1;
+  let v=parseInt(document.getElementById('ratingSlider').value);
+  if(isNaN(v)) v=0;
+  // val=2(3점구간) 침범 불가 → 1로 강제
+  if(v>=2){v=1;document.getElementById('ratingSlider').value=1;}
+  _ratingMin=v+1; // val=0→1점이상, val=1→2점이상
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   renderRvTable();
@@ -1059,18 +1063,15 @@ function onRatingChange(){
 function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
-  const val=_ratingMin;
-  // 슬라이더 범위: 1~2 (thumb 이동 영역 = 전체 트랙의 0~66%)
-  // 3점 구간(66~100%)은 항상 검정 고정 (3점 무조건 포함)
-  // val=1: 0~100% 검정 (1,2,3점 모두 포함)
-  // val=2: 0~33% 회색(1점 제외) + 33~100% 검정 (2,3점 포함)
-  // 배경은 CSS 트릭: 슬라이더 너비의 66%까지만 thumb이 가도록 max=2 설정했지만
-  // 배경은 33%/66%/100% 세 구간으로 고정 표현
-  if(val<=1){
+  // min=0, max=3 → thumb: val=0→0%, val=1→33%, val=2→66%, val=3→100%
+  // val=0: 전체검정 / val=1: 앞33%회색+나머지검정
+  // val=2 이상은 막혀있으므로 항상 33% 이후는 검정 유지
+  const v=parseInt(sl.value)||0;
+  if(v<=0){
     sl.style.background='#111';
   } else {
-    // 앞 33% 회색(1점구간), 33~100% 검정(2점+3점 포함)
-    sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
+    const pct=v/3*100;
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   }
 }
 
