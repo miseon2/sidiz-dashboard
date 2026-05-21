@@ -1060,15 +1060,17 @@ function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
   const val=_ratingMin;
-  const min=parseInt(sl.min)||1, max=parseInt(sl.max)||2;
-  // 영향력 슬라이더와 완전히 동일한 방식
-  // val=min(1): 전체 검정(모두 포함)
-  // val>min: 앞 (val-min)/(max-min)*100% 회색(빠지는구간), 나머지 검정(포함)
-  if(val<=min){
+  // 슬라이더 범위: 1~2 (thumb 이동 영역 = 전체 트랙의 0~66%)
+  // 3점 구간(66~100%)은 항상 검정 고정 (3점 무조건 포함)
+  // val=1: 0~100% 검정 (1,2,3점 모두 포함)
+  // val=2: 0~33% 회색(1점 제외) + 33~100% 검정 (2,3점 포함)
+  // 배경은 CSS 트릭: 슬라이더 너비의 66%까지만 thumb이 가도록 max=2 설정했지만
+  // 배경은 33%/66%/100% 세 구간으로 고정 표현
+  if(val<=1){
     sl.style.background='#111';
   } else {
-    const pct=(val-min)/(max-min)*100;
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
+    // 앞 33% 회색(1점구간), 33~100% 검정(2점+3점 포함)
+    sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
   }
 }
 
