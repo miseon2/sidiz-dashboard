@@ -357,7 +357,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="filter-box">
               <label>평점 최솟값</label>
               <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
-              <input type="range" id="ratingSlider" min="1" max="3" value="1" oninput="onRatingChange()" style="background:#111">
+              <input type="range" id="ratingSlider" min="1" max="2" value="1" oninput="onRatingChange()" style="background:#111">
               <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
@@ -850,8 +850,8 @@ function renderTab2(p2,p1){
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
   // 평점 슬라이더 초기화
-  document.getElementById('ratingSlider').max=3;
-  document.getElementById('ratingSlider').value=_ratingMin;
+  document.getElementById('ratingSlider').max=2;
+  document.getElementById('ratingSlider').value=Math.min(_ratingMin,2);
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
@@ -1051,10 +1051,7 @@ async function saveRvMemo(rowId,orderId){
 }
 
 function onRatingChange(){
-  let v=parseInt(document.getElementById('ratingSlider').value)||1;
-  // 3점 영역(3점은 항상 포함)은 진입 불가 → 2로 강제 고정
-  if(v>=3){v=2;document.getElementById('ratingSlider').value=2;}
-  _ratingMin=v;
+  _ratingMin=parseInt(document.getElementById('ratingSlider').value)||1;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   renderRvTable();
@@ -1063,13 +1060,14 @@ function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
   const val=_ratingMin;
-  // max=3, thumb: val=1→왼쪽, val=2→중간(50%)
-  // 의미: 1점이상=모두포함(전체검정), 2점이상=1점제외(앞1/3회색)
-  // thumb이 50%에 있을 때 배경 분기점은 33%(시각적 1점구간 끝)
+  // 슬라이더 max=2, thumb: val=1→왼쪽끝, val=2→오른쪽끝
+  // 시각은 3등분(각 33%): 1점구간/2점구간/3점구간
+  // val=1: 전체 검정 (1,2,3점 모두 포함)
+  // val=2: 앞 33%(1점구간) 회색 + 나머지 66%(2점+3점) 검정
+  // 3점구간(66~100%)은 항상 검정 = 항상 포함
   if(val<=1){
     sl.style.background='#111';
   } else {
-    // 앞 1/3(0~33%) 회색, 나머지 검정
     sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
   }
 }
