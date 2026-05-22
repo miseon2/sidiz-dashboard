@@ -357,7 +357,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="filter-box">
               <label>평점 최솟값</label>
               <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
-              <input type="range" id="ratingSlider" min="0" max="2" value="0" oninput="onRatingChange()" style="background:#111">
+              <input type="range" id="ratingSlider" min="0" max="3" value="0" oninput="onRatingChange()" style="background:#111">
               <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
@@ -850,7 +850,7 @@ function renderTab2(p2,p1){
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
   // 평점 슬라이더 초기화
-  document.getElementById('ratingSlider').max=2;
+  document.getElementById('ratingSlider').max=3;
   document.getElementById('ratingSlider').value=_ratingMin-1;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
@@ -1051,9 +1051,9 @@ async function saveRvMemo(rowId,orderId){
 }
 
 function onRatingChange(){
-  const v=parseInt(document.getElementById('ratingSlider').value)||0;
-  // min=0,max=2: val=0→1점이상, val=1→2점이상, val=2→3점이상
-  _ratingMin=v+1;
+  let v=parseInt(document.getElementById('ratingSlider').value)||0;
+  if(v>=3){v=2;document.getElementById('ratingSlider').value=2;} // 100% 침범 불가
+  _ratingMin=v+1; // val=0→1점이상, val=1→2점이상, val=2→3점이상
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
   renderRvTable();
@@ -1061,17 +1061,14 @@ function onRatingChange(){
 function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
-  // min=0, max=2: thumb val=0→0%, val=1→50%, val=2→100%
-  // 배경 분기점도 thumb위치와 동일하게 v/2*100
-  // val=0: 전체검정, val=1: 앞50%회색+뒤50%검정, val=2: 앞100%회색(=전체회색)이 되면 안됨
-  // → val=2: 앞66%회색(1,2점제외) + 뒤34%검정(3점포함 표시)
+  // min=0, max=3, JS로 val=3 차단 → thumb: 0%(val=0), 33%(val=1), 66%(val=2)
+  // 배경 분기점 = val/3*100% (thumb 위치와 정확히 일치)
   const v=parseInt(sl.value)||0;
   if(v<=0){
     sl.style.background='#111';
-  } else if(v>=2){
-    sl.style.background='linear-gradient(to right,#DCDCDC 66%,#111 66%)';
   } else {
-    sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
+    const pct=v/3*100;
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   }
 }
 
@@ -1089,15 +1086,21 @@ function onFullYearChange(){
 function updateSliderBg(){
   const sl=document.getElementById('sliderRange');
   if(!sl) return;
-  const max=parseInt(sl.max)||1,val=parseInt(sl.value)||0;
-  // max=실제최대-1: thumb이 max(오른쪽끝)에 있어도 실제최대 구간은 검정으로 남음
-  // val=0: 전체검정
-  // val=max: 앞 max/(max+1)*100% 회색 + 나머지 검정(실제최대 구간)
+  const max=parseInt(sl.max)||1; // max = N-1 (N=총 고유점수 수)
+  const N=max+1; // 총 N등분
+  const val=parseInt(sl.value)||0;
+  // thumb 위치 = val/max*100% (슬라이더 기준)
+  // 배경 분기점 = val/N*100% (N등분 시각 기준)
+  // → val/N*100으로 통일하면 thumb(val/max)과 배경(val/N)이 달라짐
+  // 해결: 배경도 thumb 위치(val/max*100)와 동일하게 맞추되
+  //       val=max(끝)일때는 전체회색 방지 위해 (N-1)/N*100으로 고정
   if(val<=0){
     sl.style.background='#111';
+  } else if(val>=max){
+    const pct=(N-1)/N*100;
+    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   } else {
-    const total=max+1;
-    const pct=(val/total)*100;
+    const pct=val/N*100; // 배경은 N등분 기준
     sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   }
 }
