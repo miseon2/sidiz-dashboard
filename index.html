@@ -1178,15 +1178,18 @@ function sw(t){
 }
 
 function renderTop10(curM, activeM){
-  const sorted=curM.slice().sort((a,b)=>b.score-a.score).slice(0,10);
-  document.getElementById('top10sub').textContent=`${activeM}월 영향력 높은 순`;
+  // 제품별 건수 집계 후 TOP10
+  const cnt={};
+  curM.forEach(r=>{cnt[r.model]=(cnt[r.model]||0)+1;});
+  const sorted=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  document.getElementById('top10sub').textContent=`${activeM}월 제품별 부정리뷰 건수 순`;
   const rankColors=['#111','#333','#555','#777','#999','#AAA','#BBB','#CCC','#DDD','#EEE'];
-  document.getElementById('top10list').innerHTML=sorted.map((r,i)=>`
+  document.getElementById('top10list').innerHTML=sorted.map(([model,cnt],i)=>`
     <div class="top10-item">
       <div class="top10-rank" style="background:${rankColors[i]}">${i+1}</div>
-      <div class="top10-model">${r.model}</div>
-      <div class="top10-content">${r.content}</div>
-      <div class="top10-score">${r.score}점</div>
+      <div class="top10-model">${model}</div>
+      <div class="top10-content" style="flex:1"></div>
+      <div class="top10-score">${cnt}건</div>
     </div>`).join('');
 }
 
