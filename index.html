@@ -357,7 +357,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="filter-box">
               <label>평점 최솟값</label>
               <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
-              <input type="range" id="ratingSlider" min="0" max="3" value="0" oninput="onRatingChange()" style="background:#111">
+              <input type="range" id="ratingSlider" min="0" max="2" value="0" oninput="onRatingChange()" style="background:#111">
               <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
             </div>
             <!-- 우: 영향력 최솟값 슬라이더 -->
@@ -841,7 +841,7 @@ function renderTab2(p2,p1){
 
   const maxSc=Math.max(...(curM.length?curM.map(r=>r.score):[10]),10);
   const slider=document.getElementById('sliderRange');
-  // 영향력 슬라이더: max를 (maxSc-1)로 제한 → 최대점수 항목은 항상 포함
+  // 영향력: max=실제최대-1 → 마지막 점수구간 항상 포함, 포인터 못 넘어감
   const sliderMax=Math.max(maxSc-1,0);
   slider.max=sliderMax;
   if(_scoreMin>sliderMax) _scoreMin=0;
@@ -850,7 +850,7 @@ function renderTab2(p2,p1){
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
   updateSliderBg();
   // 평점 슬라이더 초기화
-  document.getElementById('ratingSlider').max=3;
+  document.getElementById('ratingSlider').max=2;
   document.getElementById('ratingSlider').value=_ratingMin-1;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
@@ -1051,9 +1051,8 @@ async function saveRvMemo(rowId,orderId){
 }
 
 function onRatingChange(){
-  let v=parseInt(document.getElementById('ratingSlider').value);
-  if(isNaN(v)) v=0;
-  // val=0→1점이상(전체), val=1→2점이상, val=2→3점이상
+  const v=parseInt(document.getElementById('ratingSlider').value)||0;
+  // min=0,max=2: val=0→1점이상, val=1→2점이상, val=2→3점이상
   _ratingMin=v+1;
   document.getElementById('ratingMinDisp').textContent=_ratingMin;
   updateRatingSliderBg();
@@ -1062,15 +1061,17 @@ function onRatingChange(){
 function updateRatingSliderBg(){
   const sl=document.getElementById('ratingSlider');
   if(!sl) return;
-  // min=0, max=3 → thumb: val=0→0%, val=1→33%, val=2→66%, val=3→100%
-  // val=0: 전체검정 / val=1: 앞33%회색+나머지검정
-  // val=2 이상은 막혀있으므로 항상 33% 이후는 검정 유지
+  // min=0, max=2: thumb val=0→0%, val=1→50%, val=2→100%
+  // 배경 분기점도 thumb위치와 동일하게 v/2*100
+  // val=0: 전체검정, val=1: 앞50%회색+뒤50%검정, val=2: 앞100%회색(=전체회색)이 되면 안됨
+  // → val=2: 앞66%회색(1,2점제외) + 뒤34%검정(3점포함 표시)
   const v=parseInt(sl.value)||0;
   if(v<=0){
     sl.style.background='#111';
+  } else if(v>=2){
+    sl.style.background='linear-gradient(to right,#DCDCDC 66%,#111 66%)';
   } else {
-    const pct=v/3*100;
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
+    sl.style.background='linear-gradient(to right,#DCDCDC 33%,#111 33%)';
   }
 }
 
@@ -1089,13 +1090,14 @@ function updateSliderBg(){
   const sl=document.getElementById('sliderRange');
   if(!sl) return;
   const max=parseInt(sl.max)||1,val=parseInt(sl.value)||0;
-  // slider.max = 실제최대-1, 실제최대 항목은 항상 포함(검정)
-  // val=0: 전체검정 / val>0: 0~val 회색, val 이후 검정
-  // thumb이 max(=실제최대-1)까지만 이동 → 오른쪽 끝(실제최대 구간) 항상 검정 보임
-  if(val===0){
+  // max=실제최대-1: thumb이 max(오른쪽끝)에 있어도 실제최대 구간은 검정으로 남음
+  // val=0: 전체검정
+  // val=max: 앞 max/(max+1)*100% 회색 + 나머지 검정(실제최대 구간)
+  if(val<=0){
     sl.style.background='#111';
   } else {
-    const pct=max>0?(val/max*100):0;
+    const total=max+1;
+    const pct=(val/total)*100;
     sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   }
 }
