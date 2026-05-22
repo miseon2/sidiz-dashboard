@@ -112,6 +112,11 @@ body{background:var(--bg);min-height:100vh}
 .rv-dd-item:hover{background:#F8F8F8}
 .rv-dd-item input{accent-color:var(--dark)}
 .excel-btn{width:30px;height:30px;border-radius:9px;border:1px solid #EBEBEB;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);flex-shrink:0;padding:0}
+.top10-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #F5F5F5;font-size:11px}
+.top10-rank{width:18px;height:18px;border-radius:5px;background:#111;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.top10-model{font-weight:600;color:var(--dark);flex-shrink:0;width:50px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top10-content{color:#666;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top10-score{font-size:10px;font-weight:600;color:var(--g2);flex-shrink:0}
 /* 올해전체보기 체크박스 */
 .full-year-wrap{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--g2);cursor:pointer;padding:4px 0}
 .full-year-wrap input{accent-color:var(--dark);cursor:pointer}
@@ -288,17 +293,22 @@ body{background:var(--bg);min-height:100vh}
         <div class="cgrid2">
           <div class="cc" style="display:flex;flex-direction:column;">
             <div class="ctit">카테고리별 부정리뷰</div><div class="csub" id="catsub">-</div>
-            <!-- 카테고리 목록: flex-grow로 꽉 채움 -->
             <div id="cats" style="flex:1;display:flex;flex-direction:column;justify-content:space-evenly"></div>
           </div>
-          <div class="cc">
-            <div class="ctit">상품별 부정 리뷰</div><div class="csub">제품 선택 (중복 가능) · 기본: 부정리뷰 TOP3</div>
-            <div class="ddwrap">
+          <div class="cc" style="display:flex;flex-direction:column;">
+            <div class="ctit">이달의 부정후기 TOP10</div><div class="csub" id="top10sub">-</div>
+            <div id="top10list" style="flex:1;overflow-y:auto"></div>
+          </div>
+        </div>
+        <div class="cc">
+          <div class="ctit">상품별 부정 리뷰</div><div class="csub">제품 선택 (중복 가능) · 기본: 부정리뷰 TOP3 · 커서 올리면 많은 순 표시</div>
+          <div style="display:flex;justify-content:flex-end">
+            <div class="ddwrap" style="margin-bottom:8px">
               <button class="ddbtn" onclick="toggleDd()"><span id="ddlbl">제품 선택</span><span id="ddarr">▼</span></button>
               <div class="ddlist" id="ddlist"></div>
             </div>
-            <div style="position:relative;height:180px"><canvas id="c7"></canvas></div>
           </div>
+          <div style="position:relative;height:200px"><canvas id="c7"></canvas></div>
         </div>
         <div class="cc">
           <div class="ctit">🔥 이번달 영향력 Top 5 부정리뷰</div>
@@ -353,19 +363,21 @@ body{background:var(--bg);min-height:100vh}
             <div style="margin-top:3px"><strong>점수 기준</strong> &nbsp;평점(1점+6 / 2점+4 / 3점+2) + 도움수 + 관련리뷰(+5) + 글자수(50자↑+5 / 30~49자+3 / 30자↓+1) + 포토/영상(+5)</div>
           </div>
           <div class="filter-row">
-            <!-- 좌: 평점 단일 슬라이더 (1~3, 최솟값) -->
-            <div class="filter-box">
-              <label>평점 최솟값</label>
-              <span id="ratingMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">1</span>
-              <input type="range" id="ratingSlider" min="0" max="3" value="0" oninput="onRatingChange()" style="background:#111">
-              <span id="ratingMaxDisp" style="font-size:10px;color:var(--g2)">이상 표시</span>
+            <!-- 좌: 평점 버튼 필터 -->
+            <div class="filter-box" style="gap:6px">
+              <label>평점 필터</label>
+              <button id="rBtn1" onclick="toggleRatingBtn(1)" style="padding:4px 12px;border-radius:99px;border:1px solid #111;background:#111;color:#fff;font-size:10px;font-weight:500;cursor:pointer;font-family:inherit">1점</button>
+              <button id="rBtn2" onclick="toggleRatingBtn(2)" style="padding:4px 12px;border-radius:99px;border:1px solid #111;background:#111;color:#fff;font-size:10px;font-weight:500;cursor:pointer;font-family:inherit">2점</button>
+              <button id="rBtn3" onclick="toggleRatingBtn(3)" style="padding:4px 12px;border-radius:99px;border:1px solid #111;background:#111;color:#fff;font-size:10px;font-weight:500;cursor:pointer;font-family:inherit">3점</button>
             </div>
-            <!-- 우: 영향력 최솟값 슬라이더 -->
+            <!-- 우: 영향력 최솟값 커스텀 트랙 -->
             <div class="filter-box">
               <label>영향력 최솟값</label>
               <span id="scoreMinDisp" style="font-size:11px;font-weight:600;color:#111;min-width:20px;text-align:right">0</span>
-              <input type="range" id="sliderRange" min="0" max="30" value="0" oninput="onRangeChange()" style="background:#111">
-              <input type="number" id="scoreMinInput" class="score-num" value="0" min="0" oninput="onMinInput()">
+              <div id="scoreTrack" style="flex:1;height:6px;border-radius:99px;background:#111;cursor:pointer;position:relative;user-select:none">
+                <div id="scoreThumb" style="position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #111;cursor:grab;z-index:2"></div>
+              </div>
+              <input type="number" id="scoreMinInput" class="score-num" value="0" min="0" oninput="onScoreInput()">
             </div>
           </div>
           <table class="rv-table">
@@ -394,7 +406,8 @@ const _now=new Date();
 const _prevM=_now.getMonth()===0?12:_now.getMonth();
 let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
 let selC7Prods=[],selRvProds=[],_curMReviews=[],_allYearReviews=[],_scoreMin=0;
-let _fullYear=false,_ratingMin=1; // 올해 전체보기 / 평점 최솟값(이상 표시)
+let _fullYear=false,_ratingMin=1; // 올해 전체보기
+let selRatingBtns=new Set([1,2,3]); // 평점 버튼 필터
 let _reviewMemos={}; // {orderId: memo텍스트} - Google Sheets 연동
 
 // ===== 제품 분류 =====
@@ -836,24 +849,20 @@ function renderTab2(p2,p1){
 
   // 리뷰 목록용: 월 데이터 / 올해 전체 데이터 저장
   _curMReviews=curM;
-  _allYearReviews=cur; // 올해 전체
+  _allYearReviews=cur;
   buildRvDD(models);
+  renderTop10(curM, activeM);
 
   const maxSc=Math.max(...(curM.length?curM.map(r=>r.score):[10]),10);
   const slider=document.getElementById('sliderRange');
   // 영향력: max=실제최대-1 → 마지막 점수구간 항상 포함, 포인터 못 넘어감
   const sliderMax=Math.max(maxSc-1,0);
-  slider.max=sliderMax;
+  window._scoreMax=sliderMax;
   if(_scoreMin>sliderMax) _scoreMin=0;
-  slider.value=_scoreMin;
   document.getElementById('scoreMinInput').value=_scoreMin;
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
-  updateSliderBg();
-  // 평점 슬라이더 초기화
-  document.getElementById('ratingSlider').max=3;
-  document.getElementById('ratingSlider').value=_ratingMin-1;
-  document.getElementById('ratingMinDisp').textContent=_ratingMin;
-  updateRatingSliderBg();
+  updateScoreTrack();
+  renderRatingBtns();
   document.getElementById('rvtit').textContent=_fullYear?`${selYear}년 부정리뷰 리스트`:`${activeM}월 부정리뷰 리스트`;
   renderRvTable();
 }
@@ -930,6 +939,7 @@ function renderC7(cur,ml){
         titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},
         cornerRadius:8,padding:10,
         mode:'index',intersect:false,
+        itemSort(a,b){return (b.raw||0)-(a.raw||0);},
         callbacks:{
           title(items){return items[0]?.label||'';},
           label(ctx){
@@ -984,7 +994,7 @@ function renderRvTable(){
   const src=_fullYear?_allYearReviews:_curMReviews;
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
-  rows=rows.filter(r=>r.rating>=_ratingMin);
+  rows=rows.filter(r=>selRatingBtns.has(r.rating));
   const orderQ=(document.getElementById('orderSearch')?.value||'').trim();
   if(orderQ) rows=rows.filter(r=>(r.orderId||'').includes(orderQ));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
@@ -1050,26 +1060,25 @@ async function saveRvMemo(rowId,orderId){
   }catch(e){console.error('메모 저장 실패',e);}
 }
 
-function onRatingChange(){
-  let v=parseInt(document.getElementById('ratingSlider').value)||0;
-  if(v>=3){v=2;document.getElementById('ratingSlider').value=2;} // 100% 침범 불가
-  _ratingMin=v+1; // val=0→1점이상, val=1→2점이상, val=2→3점이상
-  document.getElementById('ratingMinDisp').textContent=_ratingMin;
-  updateRatingSliderBg();
+function toggleRatingBtn(v){
+  if(selRatingBtns.has(v)){
+    if(selRatingBtns.size===1) return;
+    selRatingBtns.delete(v);
+  } else {
+    selRatingBtns.add(v);
+  }
+  renderRatingBtns();
   renderRvTable();
 }
-function updateRatingSliderBg(){
-  const sl=document.getElementById('ratingSlider');
-  if(!sl) return;
-  // min=0, max=3, JS로 val=3 차단 → thumb: 0%(val=0), 33%(val=1), 66%(val=2)
-  // 배경 분기점 = val/3*100% (thumb 위치와 정확히 일치)
-  const v=parseInt(sl.value)||0;
-  if(v<=0){
-    sl.style.background='#111';
-  } else {
-    const pct=v/3*100;
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
-  }
+function renderRatingBtns(){
+  [1,2,3].forEach(v=>{
+    const b=document.getElementById('rBtn'+v);
+    if(!b) return;
+    const on=selRatingBtns.has(v);
+    b.style.background=on?'#111':'transparent';
+    b.style.color=on?'#fff':'#888';
+    b.style.borderColor=on?'#111':'#CCC';
+  });
 }
 
 function onFullYearChange(){
@@ -1083,41 +1092,54 @@ function onFullYearChange(){
   renderRvTable();
 }
 
-function updateSliderBg(){
-  const sl=document.getElementById('sliderRange');
-  if(!sl) return;
-  const max=parseInt(sl.max)||1; // max = N-1 (N=총 고유점수 수)
-  const N=max+1; // 총 N등분
-  const val=parseInt(sl.value)||0;
-  // thumb 위치 = val/max*100% (슬라이더 기준)
-  // 배경 분기점 = val/N*100% (N등분 시각 기준)
-  // → val/N*100으로 통일하면 thumb(val/max)과 배경(val/N)이 달라짐
-  // 해결: 배경도 thumb 위치(val/max*100)와 동일하게 맞추되
-  //       val=max(끝)일때는 전체회색 방지 위해 (N-1)/N*100으로 고정
-  if(val<=0){
-    sl.style.background='#111';
-  } else if(val>=max){
-    const pct=(N-1)/N*100;
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
+function updateScoreTrack(){
+  const N=(window._scoreMax||10)+1;
+  const thumb=document.getElementById('scoreThumb');
+  const track=document.getElementById('scoreTrack');
+  if(!thumb||!track) return;
+  const maxVal=window._scoreMax||0;
+  const pct=maxVal===0?0:_scoreMin/(maxVal+1)*100;
+  thumb.style.left=pct+'%';
+  if(_scoreMin===0){
+    track.style.background='#111';
   } else {
-    const pct=val/N*100; // 배경은 N등분 기준
-    sl.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
+    track.style.background=`linear-gradient(to right,#DCDCDC ${pct}%,#111 ${pct}%)`;
   }
 }
-function onRangeChange(){
-  _scoreMin=parseInt(document.getElementById('sliderRange').value)||0;
+function onScoreInput(){
+  const v=parseInt(document.getElementById('scoreMinInput').value)||0;
+  _scoreMin=Math.min(v, window._scoreMax||0);
   document.getElementById('scoreMinDisp').textContent=_scoreMin;
-  document.getElementById('scoreMinInput').value=_scoreMin;
-  updateSliderBg();
+  updateScoreTrack();
   renderRvTable();
 }
-function onMinInput(){
-  _scoreMin=parseInt(document.getElementById('scoreMinInput').value)||0;
-  const sl=document.getElementById('sliderRange');
-  if(sl) sl.value=_scoreMin;
-  document.getElementById('scoreMinDisp').textContent=_scoreMin;
-  updateSliderBg();
-  renderRvTable();
+function initScoreTrack(){
+  const track=document.getElementById('scoreTrack');
+  const thumb=document.getElementById('scoreThumb');
+  if(!track||!thumb) return;
+  let dragging=false;
+  function xToVal(clientX){
+    const rect=track.getBoundingClientRect();
+    const x=Math.max(0,Math.min(clientX-rect.left,rect.width));
+    const pct=x/rect.width;
+    const maxVal=window._scoreMax||0;
+    return Math.min(Math.round(pct*(maxVal+1)), maxVal);
+  }
+  track.addEventListener('click',e=>{
+    _scoreMin=xToVal(e.clientX);
+    document.getElementById('scoreMinDisp').textContent=_scoreMin;
+    document.getElementById('scoreMinInput').value=_scoreMin;
+    updateScoreTrack();renderRvTable();
+  });
+  thumb.addEventListener('mousedown',e=>{dragging=true;thumb.style.cursor='grabbing';e.preventDefault();e.stopPropagation();});
+  document.addEventListener('mousemove',e=>{
+    if(!dragging) return;
+    _scoreMin=xToVal(e.clientX);
+    document.getElementById('scoreMinDisp').textContent=_scoreMin;
+    document.getElementById('scoreMinInput').value=_scoreMin;
+    updateScoreTrack();renderRvTable();
+  });
+  document.addEventListener('mouseup',()=>{if(dragging){dragging=false;thumb.style.cursor='grab';}});
 }
 
 let ddOpen=false,rvDdOpen=false;
@@ -1155,6 +1177,19 @@ function sw(t){
   document.getElementById('ptit').textContent=t===1?'SIDIZ 네이버 실적 대시보드':'SIDIZ 부정 리뷰 대시보드';
 }
 
+function renderTop10(curM, activeM){
+  const sorted=curM.slice().sort((a,b)=>b.score-a.score).slice(0,10);
+  document.getElementById('top10sub').textContent=`${activeM}월 영향력 높은 순`;
+  const rankColors=['#111','#333','#555','#777','#999','#AAA','#BBB','#CCC','#DDD','#EEE'];
+  document.getElementById('top10list').innerHTML=sorted.map((r,i)=>`
+    <div class="top10-item">
+      <div class="top10-rank" style="background:${rankColors[i]}">${i+1}</div>
+      <div class="top10-model">${r.model}</div>
+      <div class="top10-content">${r.content}</div>
+      <div class="top10-score">${r.score}점</div>
+    </div>`).join('');
+}
+
 function showDonutHover(show){
   const el=document.getElementById('donutHover');
   if(el) el.style.display=show?'block':'none';
@@ -1185,7 +1220,7 @@ function loadMemo(){
   el.value=v||'';
 }
 
-window.onload=fetchAll;
+window.onload=()=>{fetchAll();setTimeout(initScoreTrack,500);};
 </script>
 </body>
 </html>
