@@ -385,7 +385,7 @@ body{background:var(--bg);min-height:100vh}
               <th style="width:36px">순위</th><th style="width:38px">평점</th>
               <th style="width:46px">영향력</th><th style="width:46px">등급</th>
               <th style="width:36px">도움수</th><th style="width:36px">포토</th>
-              <th style="width:80px">주문번호</th><th>리뷰 내용</th>
+              <th style="width:90px">쇼핑몰주문번호</th><th>리뷰 내용</th>
               <th style="width:58px">제품명</th><th style="width:58px">카테고리</th>
               <th style="width:52px">메모</th>
             </tr></thead>
@@ -1010,7 +1010,7 @@ function renderRvTable(){
       <td><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${sl.lv}</span></td>
       <td>${r.help}</td>
       <td style="text-align:center">${r.hasPhoto?'O':''}</td>
-      <td style="font-size:10px;color:#888">${r.orderId||'-'}</td>
+      <td style="font-size:10px">${r.orderId?`<span onclick="copyOrderId(this,'${r.orderId}')" style="cursor:pointer;color:#888;border-radius:5px;padding:2px 4px;transition:background .12s" onmouseenter="this.style.background='#F0F0F0'" onmouseleave="this.style.background='transparent'" title="클릭하여 복사">${r.orderId}</span>`:'-'}</td>
       <td>${r.content}</td>
       <td>${r.model}</td>
       <td>${r.category}</td>
@@ -1142,6 +1142,22 @@ function initScoreTrack(){
   document.addEventListener('mouseup',()=>{if(dragging){dragging=false;thumb.style.cursor='grab';}});
 }
 
+function copyOrderId(el,id){
+  navigator.clipboard.writeText(id).then(()=>{
+    const orig=el.textContent;
+    el.textContent='✓ 복사됨';
+    el.style.background='#E8F5E9';el.style.color='#1A8A5A';
+    setTimeout(()=>{el.textContent=orig;el.style.background='transparent';el.style.color='#888';},1500);
+  }).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');ta.value=id;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const orig=el.textContent;
+    el.textContent='✓ 복사됨';el.style.background='#E8F5E9';el.style.color='#1A8A5A';
+    setTimeout(()=>{el.textContent=orig;el.style.background='transparent';el.style.color='#888';},1500);
+  });
+}
+
 let ddOpen=false,rvDdOpen=false;
 function toggleDd(){
   ddOpen=!ddOpen;
@@ -1162,7 +1178,7 @@ function downloadExcel(){
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
-  const data=[['순위','평점','영향력','등급','도움수','포토/영상','주문번호','리뷰내용','제품명','카테고리','등록일','메모']];
+  const data=[['순위','평점','영향력','등급','도움수','포토/영상','쇼핑몰주문번호','리뷰내용','제품명','카테고리','등록일','메모']];
   rows.forEach((r,i)=>data.push([i+1,r.rating,r.score,r.level.lv,r.help,r.hasPhoto?'O':'',r.orderId||'',r.content,r.model,r.category,r.date,_reviewMemos[r.orderId]||'']));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
   XLSX.utils.book_append_sheet(wb,ws,'부정리뷰');
