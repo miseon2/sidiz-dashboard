@@ -132,6 +132,8 @@ body{background:var(--bg);min-height:100vh}
 /* 메모버튼 고정크기 - font-weight 항상 500 고정 */
 .rv-memo-btn-fixed{display:inline-block;width:44px;text-align:center;padding:3px 0;border-radius:6px;font-size:10px;font-weight:500!important;cursor:pointer;white-space:nowrap;font-family:inherit;transition:background .12s,color .12s,border-color .12s}
 .rv-memo-saved{font-size:10px;color:#1A8A5A}
+@keyframes savedFlash{0%{opacity:0;transform:translateY(2px)}15%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
+.rv-memo-saved.flash{animation:savedFlash 1.8s ease forwards}
 /* 필터 2단 레이아웃 */
 .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .filter-box{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#F8F8F8;border-radius:10px;border:1px solid #EBEBEB}
@@ -1110,7 +1112,13 @@ async function saveRvMemo(rowId,orderId){
   try{
     await postAPI({action:'saveReviewMemo',orderId,text});
     const msg=document.getElementById('msaved_'+rowId);
-    if(msg){msg.style.display='inline';setTimeout(()=>msg.style.display='none',2000);}
+    if(msg){
+      msg.style.display='inline';
+      msg.classList.remove('flash');
+      void msg.offsetWidth; // reflow로 애니메이션 재실행
+      msg.classList.add('flash');
+      setTimeout(()=>{msg.style.display='none';msg.classList.remove('flash');},1900);
+    }
   }catch(e){console.error('메모 저장 실패',e);}
 }
 
@@ -1293,16 +1301,23 @@ function loadMemo(){
 
 // ===== 탭3: N쿼리수 =====
 function parseTab3(){
+  if(!raw3||!raw3.length){console.warn('[Tab3] raw3 비어있음');return[];}
+  console.log('[Tab3] raw3 샘플:', raw3[0], '총 rows:', raw3.length);
   return raw3.map(r=>{
     const d=String(r['날짜']||'').trim();
-    const p=d.split('.');
-    if(!p[0]||!p[1]||!p[2]) return null;
+    // 2026.01.01 / 2026-01-01 / 2026/01/01 모두 대응
+    const p=d.split(/[.\-\/]/);
+    if(!p[0]||!p[1]) return null;
     const year=parseInt(p[0]),month=parseInt(p[1]);
     if(!year||!month) return null;
     const g1=String(r['구분1']||'').trim();
     const g2=String(r['구분2']||'').trim();
     const kw=String(r['키워드명']||'').trim();
-    const query=parseInt(String(r['쿼리']||r['G']||Object.values(r)[6]||'0').replace(/,/g,''))||0;
+    if(!kw) return null;
+    // G열(쿼리) — 컬럼명 여러 경우 + 인덱스 fallback
+    const vals=Object.values(r);
+    const rawQ=r['쿼리']??r['QUERY']??r['query']??r['G']??vals[6]??0;
+    const query=parseInt(String(rawQ).replace(/,/g,''))||0;
     return{year,month,g1,g2,kw,query};
   }).filter(Boolean);
 }
