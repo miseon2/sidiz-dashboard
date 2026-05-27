@@ -159,6 +159,15 @@ body{background:var(--bg);min-height:100vh}
       <span class="nb-icon">💬</span>
       <span class="nb-txt">부정<br>리뷰</span>
     </button>
+    <button class="nb" onclick="sw(3)" id="n3">
+      <span class="nb-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="24" height="24" rx="5" fill="#03C75A"/>
+          <polyline points="4,17 9,11 13,14 20,7" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="nb-txt">N<br>쿼리수</span>
+    </button>
   </div>
   <div class="main">
     <div class="topbar">
@@ -385,7 +394,7 @@ body{background:var(--bg);min-height:100vh}
               <th style="width:36px">순위</th><th style="width:38px">평점</th>
               <th style="width:46px">영향력</th><th style="width:46px">등급</th>
               <th style="width:36px">도움수</th><th style="width:36px">포토</th>
-              <th style="width:80px">주문번호</th><th>리뷰 내용</th>
+              <th style="width:90px">쇼핑몰주문번호</th><th>리뷰 내용</th>
               <th style="width:58px">제품명</th><th style="width:58px">카테고리</th>
               <th style="width:52px">메모</th>
             </tr></thead>
@@ -394,17 +403,48 @@ body{background:var(--bg);min-height:100vh}
         </div>
       </div>
     </div>
+
+    <!-- 탭3: N쿼리수 -->
+    <div class="pg" id="p3">
+      <div class="content">
+        <div class="fblock">
+          <div class="frow"><span class="flbl">연도</span><div id="yr3" style="display:flex;gap:4px"></div></div>
+        </div>
+        <div class="cc" style="margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+            <div><div class="ctit">브랜드 키워드</div><div class="csub">구분2 기준 색상 통일 · G열(PC+MO) 합산 기준</div></div>
+            <div id="leg3brand" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;max-width:560px"></div>
+          </div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="qChart_brand" role="img" aria-label="브랜드 키워드 월별 쿼리수 추이"></canvas></div>
+        </div>
+        <div class="cc" style="margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+            <div><div class="ctit">제품명 키워드</div><div class="csub">구분2 기준 색상 통일 · G열(PC+MO) 합산 기준</div></div>
+            <div id="leg3prod" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;max-width:560px"></div>
+          </div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="qChart_prod" role="img" aria-label="제품명 키워드 월별 쿼리수 추이"></canvas></div>
+        </div>
+        <div class="cc" style="margin-bottom:16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+            <div><div class="ctit">일반 키워드</div><div class="csub">키워드별 고유 색상 · G열(PC+MO) 합산 기준</div></div>
+            <div id="leg3gen" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end;max-width:560px"></div>
+          </div>
+          <div style="position:relative;width:100%;height:240px"><canvas id="qChart_gen" role="img" aria-label="일반 키워드 월별 쿼리수 추이"></canvas></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 const API='https://script.google.com/macros/s/AKfycbznkgGbPy4HRNXpx73yMzmZlbQScriTcHjWKo5j9pxdCkMCu6X1F8ABIz0tuKT-N_4OUA/exec';
-const GID1='543240057',GID2='1006983265';
+const GID1='543240057',GID2='1006983265',GID3='441690341';
 const Y='#FFD66B';
 const CHART_COLORS=['#4A90D9','#D93030','#1A8A5A','#A07000','#8B5CF6','#06B6D4','#F97316','#EC4899','#6366F1','#14B8A6'];
 const _now=new Date();
 const _prevM=_now.getMonth()===0?12:_now.getMonth();
-let raw1=[],raw2=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
+let raw1=[],raw2=[],raw3=[],selYear=_now.getFullYear(),selMonth=_prevM,charts={};
+let qCharts={},selYearQ=_now.getFullYear();
 let selC7Prods=[],selRvProds=[],_curMReviews=[],_allYearReviews=[],_scoreMin=0;
 let _fullYear=false,_ratingMin=1; // 올해 전체보기
 let selRatingBtns=new Set([1,2,3]); // 평점 버튼 필터
@@ -497,12 +537,13 @@ Chart.register(labelPlugin);
 async function fetchAll(){
   document.getElementById('last-updated').textContent='데이터 동기화 중...';
   try{
-    const[j1,j2,jm]=await Promise.all([
+    const[j1,j2,j3,jm]=await Promise.all([
       fetch(`${API}?gid=${GID1}`).then(r=>r.json()),
       fetch(`${API}?gid=${GID2}`).then(r=>r.json()),
+      fetch(`${API}?gid=${GID3}`).then(r=>r.json()),
       postAPI({action:'getMemos'}).catch(()=>({ok:false})),
     ]);
-    raw1=j1.data||[];raw2=j2.data||[];
+    raw1=j1.data||[];raw2=j2.data||[];raw3=j3.data||[];
     if(jm.ok&&jm.data){
       _reviewMemos=jm.data.review||{};
       window._monthlyMemos=jm.data.monthly||{};
@@ -565,7 +606,7 @@ function scoreLevel(s){
 
 // ===== 렌더 =====
 function render(){
-  const p1=parseTab1(),p2=parseTab2();
+  const p1=parseTab1(),p2=parseTab2(),p3=parseTab3();
   const yrs=[...new Set([...p1.map(r=>r.year),...p2.map(r=>r.year)])].filter(y=>y>=2025).sort();
   if(!yrs.includes(selYear)&&yrs.length) selYear=Math.max(...yrs);
   const p1Yrs=new Set(p1.map(r=>r.year));
@@ -588,8 +629,21 @@ function render(){
       b.textContent=m+'월';b.onclick=()=>{selMonth=(selMonth===m?null:m);render();};me.appendChild(b);
     }
   });
+  // 탭3 연도 버튼
+  const qYrs=[...new Set(p3.map(r=>r.year))].sort();
+  if(!qYrs.includes(selYearQ)&&qYrs.length) selYearQ=Math.max(...qYrs);
+  const ye3=document.getElementById('yr3');
+  if(ye3){
+    ye3.innerHTML='';
+    qYrs.forEach(y=>{
+      const b=document.createElement('button');
+      b.className='fp has-data'+(selYearQ===y?' on':'');
+      b.textContent=y+'년';b.onclick=()=>{selYearQ=y;renderTab3(p3);};ye3.appendChild(b);
+    });
+  }
   renderTab1(p1);
   renderTab2(p2,p1);
+  renderTab3(p3);
 }
 
 // ===== 탭1 =====
@@ -1010,7 +1064,7 @@ function renderRvTable(){
       <td><span class="rv-pill" style="background:${sl.bg};color:${sl.color}">${sl.lv}</span></td>
       <td>${r.help}</td>
       <td style="text-align:center">${r.hasPhoto?'O':''}</td>
-      <td style="font-size:10px;color:#888">${r.orderId||'-'}</td>
+      <td style="font-size:10px">${r.orderId?`<span onclick="copyOrderId(this,'${r.orderId}')" style="cursor:pointer;color:#888;border-radius:5px;padding:2px 4px;transition:background .12s" onmouseenter="this.style.background='#F0F0F0'" onmouseleave="this.style.background='transparent'" title="클릭하여 복사">${r.orderId}</span>`:'-'}</td>
       <td>${r.content}</td>
       <td>${r.model}</td>
       <td>${r.category}</td>
@@ -1142,6 +1196,20 @@ function initScoreTrack(){
   document.addEventListener('mouseup',()=>{if(dragging){dragging=false;thumb.style.cursor='grab';}});
 }
 
+function copyOrderId(el,id){
+  navigator.clipboard.writeText(id).then(()=>{
+    const orig=el.textContent;
+    el.textContent='✓ 복사됨';el.style.background='#E8F5E9';el.style.color='#1A8A5A';
+    setTimeout(()=>{el.textContent=orig;el.style.background='transparent';el.style.color='#888';},1500);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=id;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    const orig=el.textContent;
+    el.textContent='✓ 복사됨';el.style.background='#E8F5E9';el.style.color='#1A8A5A';
+    setTimeout(()=>{el.textContent=orig;el.style.background='transparent';el.style.color='#888';},1500);
+  });
+}
+
 let ddOpen=false,rvDdOpen=false;
 function toggleDd(){
   ddOpen=!ddOpen;
@@ -1162,7 +1230,7 @@ function downloadExcel(){
   let rows=src.filter(r=>r.score>=_scoreMin);
   if(selRvProds.length>0) rows=rows.filter(r=>selRvProds.includes(r.model));
   rows=rows.slice().sort((a,b)=>b.score-a.score);
-  const data=[['순위','평점','영향력','등급','도움수','포토/영상','주문번호','리뷰내용','제품명','카테고리','등록일','메모']];
+  const data=[['순위','평점','영향력','등급','도움수','포토/영상','쇼핑몰주문번호','리뷰내용','제품명','카테고리','등록일','메모']];
   rows.forEach((r,i)=>data.push([i+1,r.rating,r.score,r.level.lv,r.help,r.hasPhoto?'O':'',r.orderId||'',r.content,r.model,r.category,r.date,_reviewMemos[r.orderId]||'']));
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(data);
   XLSX.utils.book_append_sheet(wb,ws,'부정리뷰');
@@ -1174,7 +1242,7 @@ function sw(t){
   document.getElementById('p'+t).classList.add('on');
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('n'+t).classList.add('on');
-  document.getElementById('ptit').textContent=t===1?'SIDIZ 네이버 실적 대시보드':'SIDIZ 부정 리뷰 대시보드';
+  document.getElementById('ptit').textContent=t===1?'SIDIZ 네이버 실적 대시보드':t===2?'SIDIZ 부정 리뷰 대시보드':'SIDIZ N쿼리수 대시보드';
 }
 
 function renderTop10(curM, activeM){
@@ -1221,6 +1289,201 @@ function loadMemo(){
   const key=`${selYear}_${selMonth||'all'}`;
   const v=(window._monthlyMemos&&window._monthlyMemos[key])||'';
   el.value=v||'';
+}
+
+// ===== 탭3: N쿼리수 =====
+function parseTab3(){
+  return raw3.map(r=>{
+    const d=String(r['날짜']||'').trim();
+    const p=d.split('.');
+    if(!p[0]||!p[1]||!p[2]) return null;
+    const year=parseInt(p[0]),month=parseInt(p[1]);
+    if(!year||!month) return null;
+    const g1=String(r['구분1']||'').trim();
+    const g2=String(r['구분2']||'').trim();
+    const kw=String(r['키워드명']||'').trim();
+    const query=parseInt(String(r['쿼리']||r['G']||Object.values(r)[6]||'0').replace(/,/g,''))||0;
+    return{year,month,g1,g2,kw,query};
+  }).filter(Boolean);
+}
+
+const Q_BRAND_COLORS={
+  '시디즈':['#1A1A1A','#444444','#666666','#888888','#AAAAAA'],
+  '허먼밀러':['#2979FF','#64B5F6','#90CAF9','#BBDEFB'],
+  '이케아':['#D81B60','#F06292','#F48FB1'],
+  '듀오백':['#E65100','#FF8A65'],
+  '시디즈의자':['#333333'],
+};
+const Q_GEN_COLORS=['#E53935','#8E24AA','#1E88E5','#00897B','#F4511E','#6D4C41','#3949AB','#00ACC1','#43A047','#FB8C00','#D81B60','#5E35B1','#00838F','#558B2F'];
+const Q_DASHES=[[],[5,3],[2,2],[6,2],[5,2,2,2],[8,3],[3,3],[6,2,2,2],[7,2],[2,4],[6,4],[3,2,3],[4,4],[8,4]];
+
+function getBrandColor(g2,idx){
+  const pal=Q_BRAND_COLORS[g2];
+  if(pal) return{color:pal[idx%pal.length],dash:idx===0?[]:[5,3]};
+  const fallbacks=['#607D8B','#78909C','#90A4AE'];
+  return{color:fallbacks[idx%fallbacks.length],dash:idx===0?[]:[5,3]};
+}
+
+function buildQDatasets(rows,type){
+  const MONTHS=Array.from({length:12},(_,i)=>i+1);
+  const keyMap={};
+  rows.forEach(r=>{
+    const key=type==='gen'?r.kw:r.kw;
+    const g2=r.g2;
+    if(!keyMap[key]) keyMap[key]={g2,data:{}};
+    keyMap[key].data[r.month]=(keyMap[key].data[r.month]||0)+r.query;
+  });
+  const keys=Object.keys(keyMap);
+  const g2Groups={};
+  keys.forEach(k=>{
+    const g=keyMap[k].g2;
+    if(!g2Groups[g]) g2Groups[g]=[];
+    g2Groups[g].push(k);
+  });
+  return keys.map((k,ki)=>{
+    const entry=keyMap[k];
+    let color,dash;
+    if(type==='gen'){
+      color=Q_GEN_COLORS[ki%Q_GEN_COLORS.length];
+      dash=Q_DASHES[ki%Q_DASHES.length];
+    } else {
+      const g2=entry.g2;
+      const idxInG2=g2Groups[g2].indexOf(k);
+      const cd=getBrandColor(g2,idxInG2);
+      color=cd.color;dash=cd.dash;
+    }
+    const data=MONTHS.map(m=>keyMap[k].data[m]||null);
+    return{label:k,g2:entry.g2,data,borderColor:color,backgroundColor:'transparent',
+      borderWidth:2,borderDash:dash,pointRadius:3,pointHoverRadius:5,
+      pointBackgroundColor:color,tension:0.35,hidden:false,_color:color};
+  });
+}
+
+function buildLegend(legEl,chartId,datasets){
+  legEl.innerHTML='';
+  const allBtn=document.createElement('button');
+  allBtn.className='rating-pill on';
+  allBtn.style.cssText='font-size:10px;padding:3px 10px';
+  allBtn.textContent='전체';
+  allBtn.dataset.role='all';
+  legEl.appendChild(allBtn);
+
+  const hidden={};
+  datasets.forEach((ds,i)=>{
+    hidden[ds.label]=false;
+    const btn=document.createElement('button');
+    btn.className='rating-pill on';
+    btn.style.cssText=`font-size:10px;padding:3px 10px;display:flex;align-items:center;gap:4px`;
+    btn.innerHTML=`<span style="width:7px;height:7px;border-radius:50%;background:${ds._color};flex-shrink:0;display:inline-block"></span>${ds.label}`;
+    btn.dataset.key=ds.label;
+    legEl.appendChild(btn);
+  });
+
+  legEl.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-role],[data-key]');
+    if(!btn) return;
+    const chart=qCharts[chartId];
+    if(!chart) return;
+    if(btn.dataset.role==='all'){
+      const allOn=datasets.every(ds=>!hidden[ds.label]);
+      datasets.forEach((ds,i)=>{
+        hidden[ds.label]=allOn;
+        chart.data.datasets[i].hidden=allOn;
+        legEl.querySelectorAll('[data-key]')[i].classList.toggle('on',!allOn);
+        legEl.querySelectorAll('[data-key]')[i].style.opacity=allOn?'0.35':'1';
+      });
+      allBtn.classList.toggle('on',!allOn);
+      allBtn.style.opacity=allOn?'0.35':'1';
+    } else {
+      const k=btn.dataset.key;
+      const idx=datasets.findIndex(d=>d.label===k);
+      hidden[k]=!hidden[k];
+      chart.data.datasets[idx].hidden=hidden[k];
+      btn.classList.toggle('on',!hidden[k]);
+      btn.style.opacity=hidden[k]?'0.35':'1';
+      const allOn=datasets.every(ds=>!hidden[ds.label]);
+      allBtn.classList.toggle('on',allOn);
+      allBtn.style.opacity=allOn?'1':'0.35';
+    }
+    chart.update();
+  });
+}
+
+function makeQChart(canvasId,datasets){
+  if(qCharts[canvasId]){qCharts[canvasId].destroy();delete qCharts[canvasId];}
+  const canvas=document.getElementById(canvasId);
+  if(!canvas) return;
+  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const chart=new Chart(canvas,{
+    type:'line',
+    data:{labels:MONTHS,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external(ctx){
+            let ttEl=document.getElementById('qtt');
+            if(!ttEl){
+              ttEl=document.createElement('div');
+              ttEl.id='qtt';
+              ttEl.style.cssText='position:absolute;background:#fff;border:1px solid #E8E8E8;border-radius:8px;padding:10px 14px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .1s;z-index:999;min-width:180px;color:#333;box-shadow:0 2px 8px rgba(0,0,0,.08)';
+              document.body.appendChild(ttEl);
+            }
+            const {chart,tooltip}=ctx;
+            if(tooltip.opacity===0){ttEl.style.opacity='0';return;}
+            const items=tooltip.dataPoints||[];
+            const month=items[0]?.label||'';
+            const visible=items.filter(i=>!chart.data.datasets[i.datasetIndex].hidden);
+            // 쿼리 높은 순 정렬
+            visible.sort((a,b)=>b.parsed.y-a.parsed.y);
+            const total=visible.reduce((s,i)=>s+i.parsed.y,0);
+            let html=`<div style="font-size:12px;font-weight:500;color:#111;margin-bottom:6px;border-bottom:1px solid #F0F0F0;padding-bottom:4px">${month}</div>`;
+            visible.forEach(i=>{
+              const col=chart.data.datasets[i.datasetIndex].borderColor;
+              html+=`<div style="display:flex;justify-content:space-between;gap:16px;line-height:1.9"><span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block"></span>${i.dataset.label}</span><span>${i.parsed.y.toLocaleString()}</span></div>`;
+            });
+            html+=`<div style="display:flex;justify-content:space-between;gap:16px;font-weight:500;color:#111;border-top:1px solid #F0F0F0;margin-top:4px;padding-top:4px"><span>합계</span><span>${total.toLocaleString()}</span></div>`;
+            ttEl.innerHTML=html;
+            const rect=canvas.getBoundingClientRect();
+            const sy=window.scrollY||document.documentElement.scrollTop;
+            let left=rect.left+tooltip.caretX+14;
+            if(left+200>window.innerWidth) left=rect.left+tooltip.caretX-214;
+            ttEl.style.left=left+'px';
+            ttEl.style.top=(rect.top+sy+tooltip.caretY-20)+'px';
+            ttEl.style.opacity='1';
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'rgba(128,128,128,.07)'},ticks:{font:{size:11},color:'#888',autoSkip:false,maxRotation:0}},
+        y:{grid:{color:'rgba(128,128,128,.07)'},ticks:{font:{size:11},color:'#888',callback:v=>v.toLocaleString()}}
+      }
+    }
+  });
+  qCharts[canvasId]=chart;
+  return chart;
+}
+
+function renderTab3(p3){
+  const yr=p3.filter(r=>r.year===selYearQ);
+  const brandRows=yr.filter(r=>r.g1==='브랜드');
+  const prodRows=yr.filter(r=>r.g1==='제품명');
+  const genRows=yr.filter(r=>r.g1==='일반');
+
+  const dsBrand=buildQDatasets(brandRows,'brand');
+  const dsProd=buildQDatasets(prodRows,'prod');
+  const dsGen=buildQDatasets(genRows,'gen');
+
+  makeQChart('qChart_brand',dsBrand);
+  makeQChart('qChart_prod',dsProd);
+  makeQChart('qChart_gen',dsGen);
+
+  buildLegend(document.getElementById('leg3brand'),'qChart_brand',dsBrand);
+  buildLegend(document.getElementById('leg3prod'),'qChart_prod',dsProd);
+  buildLegend(document.getElementById('leg3gen'),'qChart_gen',dsGen);
 }
 
 window.onload=()=>{fetchAll();setTimeout(initScoreTrack,500);};
