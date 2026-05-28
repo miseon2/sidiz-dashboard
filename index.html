@@ -286,6 +286,15 @@ body{background:var(--bg);min-height:100vh}
           <div class="frow"><span class="flbl">월</span><div id="mo2" style="display:flex;gap:4px;flex-wrap:wrap"></div></div>
         </div>
         <div class="kgrid6" id="k2top"></div>
+        <!-- 리뷰수 추이 (부정리뷰 탭) -->
+        <div class="cc" style="margin-bottom:11px">
+          <div class="ctit">리뷰수 추이</div><div class="csub" id="rsub2">-</div>
+          <div class="leg">
+            <div class="li"><div class="ll" style="background:#111"></div>올해</div>
+            <div class="li"><div class="la" style="background:#888"></div>전년 범위</div>
+          </div>
+          <div style="position:relative;height:148px"><canvas id="c4b"></canvas></div>
+        </div>
         <div class="cgrid2">
           <div class="cc">
             <div class="ctit">총 부정리뷰 추이</div><div class="csub" id="n5sub">-</div>
@@ -842,6 +851,25 @@ function renderTab2(p2,p1){
 
   const ml=Array.from({length:12},(_,i)=>(i+1)+'월');
 
+  const p1ForRv=p1.filter(r=>r.year===selYear);
+  const p1PrevForRv=p1.filter(r=>r.year===selYear-1);
+  const rvD2=ml.map((_,i)=>p1ForRv.find(x=>x.month===i+1)?.reviews||null);
+  const prevRv2=ml.map((_,i)=>p1PrevForRv.find(x=>x.month===i+1)?.reviews||null);
+  document.getElementById('rsub2').textContent=`${selYear}년 / ${selYear-1}년 비교`;
+  mkC('c4b',{type:'line',data:{labels:ml,datasets:[
+    {label:`${selYear-1}년`,data:prevRv2,fill:true,tension:0.4,
+     borderColor:'rgba(150,150,150,0.3)',borderWidth:1,pointRadius:0,
+     backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),order:2},
+    {label:`${selYear}년`,data:rvD2,borderColor:'#111',borderWidth:1.5,tension:0.4,
+     pointRadius:2.5,pointBackgroundColor:'#111',fill:false,order:1,
+     _showLabel:true,_fmt:v=>v?fNum(v):''},
+  ]},options:{...bO,plugins:{...bO.plugins,tooltip:{
+    backgroundColor:'rgba(17,17,17,0.88)',titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},cornerRadius:8,padding:8,
+    mode:'index',intersect:false,
+    filter(item){return item.raw!==null&&item.raw!==undefined;},
+    callbacks:{label(ctx){const v=ctx.raw;if(v===null||v===undefined)return null;return ` ${ctx.dataset.label}: ${fNum(v)}건`;}}
+  }}}});
+
   // c5
   const negD=ml.map((_,i)=>cur.filter(r=>r.month===i+1).length||null);
   const prevNeg=ml.map((_,i)=>prev.filter(r=>r.month===i+1).length||null);
@@ -853,9 +881,14 @@ function renderTab2(p2,p1){
     {label:`${selYear}년`,data:negD,borderColor:'#111',borderWidth:1.5,tension:0.4,
      pointRadius:2.5,pointBackgroundColor:'#111',fill:false,order:1,
      _showLabel:true,_fmt:v=>v?String(v):''},
-  ]},options:{...bO}});
+  ]},options:{...bO,plugins:{...bO.plugins,tooltip:{
+    backgroundColor:'rgba(17,17,17,0.88)',titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},cornerRadius:8,padding:8,
+    mode:'index',intersect:false,
+    filter(item){return item.raw!==null&&item.raw!==undefined;},
+    callbacks:{label(ctx){const v=ctx.raw;if(v===null||v===undefined)return null;return ` ${ctx.dataset.label}: ${v}건`;}}
+  }}}});
 
-  // c6: 범례 chart.js 내장 legend 사용 (HTML 범례 제거)
+  // c6
   mkC('c6',{type:'line',data:{labels:ml,datasets:[
     {label:'1점',data:ml.map((_,i)=>cur.filter(r=>r.month===i+1&&r.rating===1).length||null),
      borderColor:'#D93030',borderWidth:1.5,tension:0.4,pointRadius:2.5,fill:false,
@@ -867,7 +900,13 @@ function renderTab2(p2,p1){
      borderColor:'#AAA',borderWidth:1.5,tension:0.4,pointRadius:2.5,fill:false,
      _showLabel:true,_fmt:v=>v?String(v):''},
   ]},options:{...bO,plugins:{...bO.plugins,
-    legend:{display:true,position:'top',align:'end',labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:8,usePointStyle:true}}
+    legend:{display:true,position:'top',align:'end',labels:{font:{size:9,family:'Inter'},boxWidth:10,padding:8,usePointStyle:true}},
+    tooltip:{
+      backgroundColor:'rgba(17,17,17,0.88)',titleFont:{size:10,family:'Inter'},bodyFont:{size:10,family:'Inter'},cornerRadius:8,padding:8,
+      mode:'index',intersect:false,
+      filter(item){return item.raw!==null&&item.raw!==undefined;},
+      callbacks:{label(ctx){const v=ctx.raw;if(v===null||v===undefined)return null;return ` ${ctx.dataset.label}: ${v}건`;}}
+    }
   }}});
 
   // 카테고리: 해당 월, 꽉 채움
@@ -1015,31 +1054,43 @@ function buildRvDD(models){
   allItem.innerHTML=`<input type="checkbox" id="rvAllChk" checked/><span>전체</span>`;
   allItem.querySelector('input').onchange=e=>{
     if(e.target.checked){
+      // 전체 선택: 모든 상품 체크 ON, selRvProds 초기화
       selRvProds=[];
       document.getElementById('rvProdLbl').textContent='상품명';
-      // 다른 체크박스 해제
+      list.querySelectorAll('input:not(#rvAllChk)').forEach(x=>x.checked=true);
+    } else {
+      // 전체 해제: 모든 상품 체크 OFF
       list.querySelectorAll('input:not(#rvAllChk)').forEach(x=>x.checked=false);
+      selRvProds=[];
+      document.getElementById('rvProdLbl').textContent='상품명';
     }
     renderRvTable();
   };
   list.appendChild(allItem);
   models.forEach(m=>{
     const item=document.createElement('div');item.className='rv-dd-item';
-    item.innerHTML=`<input type="checkbox"/><span>${m}</span>`;
+    item.innerHTML=`<input type="checkbox" checked/><span>${m}</span>`;
     item.querySelector('input').onchange=e=>{
       if(e.target.checked){
         if(!selRvProds.includes(m))selRvProds.push(m);
-        // 전체 체크박스 해제
-        const allChk=document.getElementById('rvAllChk');
-        if(allChk) allChk.checked=false;
       } else {
         selRvProds=selRvProds.filter(x=>x!==m);
-        if(!selRvProds.length){
-          const allChk=document.getElementById('rvAllChk');
-          if(allChk) allChk.checked=true;
-        }
       }
-      document.getElementById('rvProdLbl').textContent=selRvProds.length?selRvProds.join(', '):'상품명';
+      // 모든 상품이 체크돼 있으면 → 전체 체크 ON + selRvProds 초기화
+      const allChecked=models.every(md=>
+        [...list.querySelectorAll('input:not(#rvAllChk)')].find((x,i)=>models[i]===md)?.checked!==false
+      );
+      const itemInputs=[...list.querySelectorAll('input:not(#rvAllChk)')];
+      const allOn=itemInputs.every(x=>x.checked);
+      const allChk=document.getElementById('rvAllChk');
+      if(allOn){
+        selRvProds=[];
+        if(allChk) allChk.checked=true;
+        document.getElementById('rvProdLbl').textContent='상품명';
+      } else {
+        if(allChk) allChk.checked=false;
+        document.getElementById('rvProdLbl').textContent=selRvProds.length?selRvProds.join(', '):'상품명';
+      }
       renderRvTable();
     };
     list.appendChild(item);
