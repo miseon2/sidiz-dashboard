@@ -251,7 +251,7 @@ body{background:var(--bg);min-height:100vh}
           <div class="ctit">리뷰수 추이</div><div class="csub" id="rsub">-</div>
           <div class="leg">
             <div class="li"><div class="ll" style="background:#111"></div><span id="rlbl1">올해</span></div>
-            <div class="li"><div class="la" style="background:#888"></div><span id="rlbl2">전년 범위</span></div>
+            <div class="li"><div style="width:14px;height:0;border-top:1.5px dashed #555;flex-shrink:0"></div><span id="rlbl2">전년</span></div>
           </div>
           <div style="position:relative;height:135px"><canvas id="c4"></canvas></div>
         </div>
@@ -262,7 +262,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="ctit">구매자수 추이</div><div class="csub" id="bsub">-</div>
             <div class="leg">
               <div class="li"><div class="ll" style="background:#111"></div><span id="blbl1">올해</span></div>
-              <div class="li"><div class="la" style="background:#888"></div><span id="blbl2">전년 범위</span></div>
+              <div class="li"><div style="width:14px;height:0;border-top:1.5px dashed #555;flex-shrink:0"></div><span id="blbl2">전년</span></div>
             </div>
             <div style="position:relative;height:145px"><canvas id="c2"></canvas></div>
           </div>
@@ -291,7 +291,7 @@ body{background:var(--bg);min-height:100vh}
           <div class="ctit">리뷰수 추이</div><div class="csub" id="rsub2">-</div>
           <div class="leg">
             <div class="li"><div class="ll" style="background:#111"></div>올해</div>
-            <div class="li"><div class="la" style="background:#888"></div>전년 범위</div>
+            <div class="li"><div style="width:14px;height:0;border-top:1.5px dashed #555;flex-shrink:0"></div>전년</div>
           </div>
           <div style="position:relative;height:148px"><canvas id="c4b"></canvas></div>
         </div>
@@ -300,7 +300,7 @@ body{background:var(--bg);min-height:100vh}
             <div class="ctit">총 부정리뷰 추이</div><div class="csub" id="n5sub">-</div>
             <div class="leg">
               <div class="li"><div class="ll" style="background:#111"></div>올해</div>
-              <div class="li"><div class="la" style="background:#888"></div>전년 범위</div>
+              <div class="li"><div style="width:14px;height:0;border-top:1.5px dashed #555;flex-shrink:0"></div>전년</div>
             </div>
             <div style="position:relative;height:148px"><canvas id="c5"></canvas></div>
           </div>
@@ -740,9 +740,8 @@ function renderTab1(p1){
   const prevBuy=ml.map((_,i)=>prev.find(x=>x.month===i+1)?.buyers||null);
   document.getElementById('bsub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
   mkC('c2',{type:'line',data:{labels:ml,datasets:[
-    {label:`${selYear-1}년`,data:prevBuy,fill:true,tension:0.4,
-     borderColor:'rgba(150,150,150,0.3)',borderWidth:1,pointRadius:0,
-     backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),order:2},
+    {label:`${selYear-1}년`,data:prevBuy,fill:false,tension:0.4,
+     borderColor:'#555',borderWidth:1,borderDash:[5,4],pointRadius:0,order:2},
     {label:`${selYear}년`,data:buyD,borderColor:'#111',borderWidth:1.5,tension:0.4,
      pointRadius:2.5,pointBackgroundColor:'#111',fill:false,order:1,
      _showLabel:true,_fmt:v=>v?fNum(v):''},
@@ -804,9 +803,8 @@ function renderTab1(p1){
   const prevRv=ml.map((_,i)=>prev.find(x=>x.month===i+1)?.reviews||null);
   document.getElementById('rsub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
   mkC('c4',{type:'line',data:{labels:ml,datasets:[
-    {label:`${selYear-1}년`,data:prevRv,fill:true,tension:0.4,
-     borderColor:'rgba(150,150,150,0.3)',borderWidth:1,pointRadius:0,
-     backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),order:2},
+    {label:`${selYear-1}년`,data:prevRv,fill:false,tension:0.4,
+     borderColor:'#555',borderWidth:1,borderDash:[5,4],pointRadius:0,order:2},
     {label:`${selYear}년`,data:rvD,borderColor:'#111',borderWidth:1.5,tension:0.4,
      pointRadius:2.5,pointBackgroundColor:'#111',fill:false,order:1,
      _showLabel:true,_fmt:v=>v?fNum(v):''},
@@ -857,9 +855,8 @@ function renderTab2(p2,p1){
   const prevRv2=ml.map((_,i)=>p1PrevForRv.find(x=>x.month===i+1)?.reviews||null);
   document.getElementById('rsub2').textContent=`${selYear}년 / ${selYear-1}년 비교`;
   mkC('c4b',{type:'line',data:{labels:ml,datasets:[
-    {label:`${selYear-1}년`,data:prevRv2,fill:true,tension:0.4,
-     borderColor:'rgba(150,150,150,0.3)',borderWidth:1,pointRadius:0,
-     backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),order:2},
+    {label:`${selYear-1}년`,data:prevRv2,fill:false,tension:0.4,
+     borderColor:'#555',borderWidth:1,borderDash:[5,4],pointRadius:0,order:2},
     {label:`${selYear}년`,data:rvD2,borderColor:'#111',borderWidth:1.5,tension:0.4,
      pointRadius:2.5,pointBackgroundColor:'#111',fill:false,order:1,
      _showLabel:true,_fmt:v=>v?fNum(v):''},
@@ -875,9 +872,8 @@ function renderTab2(p2,p1){
   const prevNeg=ml.map((_,i)=>prev.filter(r=>r.month===i+1).length||null);
   document.getElementById('n5sub').textContent=`${selYear}년 / ${selYear-1}년 비교`;
   mkC('c5',{type:'line',data:{labels:ml,datasets:[
-    {label:`${selYear-1}년`,data:prevNeg,fill:true,tension:0.4,
-     borderColor:'rgba(150,150,150,0.3)',borderWidth:1,pointRadius:0,
-     backgroundColor:ctx=>makeGrad(ctx,150,150,150,0.18,0.01),order:2},
+    {label:`${selYear-1}년`,data:prevNeg,fill:false,tension:0.4,
+     borderColor:'#555',borderWidth:1,borderDash:[5,4],pointRadius:0,order:2},
     {label:`${selYear}년`,data:negD,borderColor:'#111',borderWidth:1.5,tension:0.4,
      pointRadius:2.5,pointBackgroundColor:'#111',fill:false,order:1,
      _showLabel:true,_fmt:v=>v?String(v):''},
